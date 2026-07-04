@@ -156,7 +156,7 @@ class PositionManager:
         max_shares = self._round_lot(int(budget / price))
         return PositionCheck(
             allowed=True, max_shares=max_shares, reason="OK",
-            current_weight=current_weight, target_weight=(current_mv + max_shares * price) / (total_value + max_shares * price),
+            current_weight=current_weight, target_weight=(current_mv + max_shares * price) / total_value,
         )
 
     def check_sell(

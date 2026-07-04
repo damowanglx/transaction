@@ -44,15 +44,16 @@ def check_overnight_gaps(
         entry = pos.get("entry_price", 0) if isinstance(pos, dict) else 0
         volume = pos.get("volume", 0) if isinstance(pos, dict) else 0
 
-        if today_open:
-            open_price = today_open.get(code, close)
-        else:
-            open_price = close  # Can't check without open data
-
+        # Use today's open if available, otherwise use prev_close (gap=0, still flag entry P&L)
+        open_price = today_open.get(code, close) if today_open else close
         gap_pct = (open_price - close) / close if close > 0 else 0
 
-        if abs(gap_pct) < gap_warning_pct:
-            continue
+        # Also check entry P&L (may be in loss territory even without gap)
+        entry_pnl = (open_price - entry) / entry * 100 if entry > 0 else 0
+
+        # Alert on significant gaps OR deep losses
+        if abs(gap_pct) < gap_warning_pct and entry_pnl > -5:
+            continue  # No gap and not in loss — skip
 
         severity = "CRITICAL" if abs(gap_pct) >= gap_critical_pct else "WARN"
         direction = "高开" if gap_pct > 0 else "低开"

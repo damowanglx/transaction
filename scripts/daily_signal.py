@@ -105,6 +105,13 @@ def main(strategy: str = "trend_follow", dry_run: bool = False):
     except Exception:
         pass
 
+    # Check emergency stop before generating signals
+    from scripts.emergency_stop import is_halted
+    if is_halted():
+        logger.critical("EMERGENCY STOP ACTIVE — no signals generated")
+        print("\n🚨 紧急停止已激活，不生成交易信号 🚨\n")
+        return
+
     # Load current positions from file (yesterday's buys)
     pos_file = Path(__file__).resolve().parent / "positions.json"
     current_positions = {}

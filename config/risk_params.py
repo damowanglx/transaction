@@ -56,11 +56,34 @@ CONSERVATIVE_RISK_CONFIG = RiskConfig(
 
 
 def get_risk_config(mode: str = "default") -> RiskConfig:
-    """Get risk configuration by mode."""
+    """Get risk configuration by mode, merged with user overrides.
+
+    Reads config/user_config.json if present and overlays user settings.
+    """
+    from dataclasses import asdict
+    import json
+    from pathlib import Path
+
     modes = {
         "default": DEFAULT_RISK_CONFIG,
         "conservative": CONSERVATIVE_RISK_CONFIG,
     }
     if mode not in modes:
         raise ValueError(f"Unknown risk mode: {mode}. Valid modes: {list(modes.keys())}")
-    return modes[mode]
+
+    config = modes[mode]
+
+    # Overlay user config if present
+    user_file = Path(__file__).resolve().parent.parent / "config" / "user_config.json"
+    if user_file.exists():
+        try:
+            user_data = json.loads(user_file.read_text())
+            risk_overrides = user_data.get("risk", {})
+            if risk_overrides:
+                merged = {**asdict(config), **risk_overrides}
+                config = RiskConfig(**merged)
+                logger.debug("Loaded user risk config from %s", user_file)
+        except Exception:
+            logger.warning("Failed to load user_config.json, using defaults", exc_info=True)
+
+    return config

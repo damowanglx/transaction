@@ -129,7 +129,7 @@ def fetch_stock_daily_hist(
                 "high": _safe_float(row.get("最高")),
                 "low": _safe_float(row.get("最低")),
                 "close": _safe_float(row.get("收盘")),
-                "pre_close": _safe_float(row.get(("前收盘" if adjust else "昨收"))),
+                "pre_close": _safe_float(row.get("前收盘" if adjust else "昨收")),
                 "change": _safe_float(row.get("涨跌额")),
                 "pct_chg": _safe_float(row.get("涨跌幅")),
                 "vol": _safe_float(row.get("成交量")),
@@ -137,7 +137,7 @@ def fetch_stock_daily_hist(
                 "turnover_rate": _safe_float(row.get("换手率")),
                 "pe": _safe_float(row.get("市盈率-动态"), -1) if _safe_float(row.get("市盈率-动态"), -1) != -1 else None,
                 "pb": _safe_float(row.get("市净率"), -1) if _safe_float(row.get("市净率"), -1) != -1 else None,
-                "is_st": 1 if "ST" in str(row.get("股票名称", "")) or "*ST" in str(row.get("股票名称", "")) else 0,
+                "is_st": 1 if "ST" in str(row.get("股票简称", "")) or "*ST" in str(row.get("股票简称", "")) else 0,
             }
             records.append(record)
 

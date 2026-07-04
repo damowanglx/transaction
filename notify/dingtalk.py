@@ -169,6 +169,6 @@ class DingTalkNotifier:
                 logger.error("DingTalk send failed: %s", result.get("errmsg"))
             else:
                 logger.info("DingTalk message sent: %s", title)
-            time.sleep(0.1)  # Rate limit: 20 msg/min
+            time.sleep(3.0)  # Rate limit: 20 msg/min = 3s between messages
         except Exception:
             logger.exception("DingTalk send error")

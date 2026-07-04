@@ -54,13 +54,14 @@ def clean_daily_bars(records: list[dict]) -> list[dict]:
         if r["vol"] <= 0:
             continue
 
-        # ---- Enrich: Fill missing PE/PB with None ----
-        r.setdefault("pe", None)
-        r.setdefault("pb", None)
-        r.setdefault("turnover_rate", 0.0)
-        r.setdefault("is_st", 0)
-
-        clean.append(r)
+        # ---- Enrich: Fill missing PE/PB with None (immutable pattern) ----
+        clean.append({
+            **r,
+            "pe": r.get("pe"),
+            "pb": r.get("pb"),
+            "turnover_rate": r.get("turnover_rate", 0.0),
+            "is_st": r.get("is_st", 0),
+        })
 
     # ---- Dedup: Keep last occurrence per (ts_code, trade_date) ----
     seen: dict[tuple, int] = {}
