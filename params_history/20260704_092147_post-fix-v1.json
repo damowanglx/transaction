@@ -1,0 +1,25 @@
+{
+  "mean_revert": {
+    "bb_period": 23,
+    "bb_std": 3.0,
+    "rsi_oversold": 26,
+    "rsi_overbought": 65,
+    "stop_loss": 0.05,
+    "take_profit": 0.1,
+    "top_n": 10,
+    "min_price": 5.0,
+    "min_turnover": 1.0,
+    "atr_mult": 2.0,
+    "use_atr_stop": true,
+    "use_vol_target": true,
+    "green_candle": true
+  },
+  "risk": {
+    "max_single_position_pct": 0.2,
+    "max_total_position_pct": 0.8,
+    "max_holdings_count": 10,
+    "stop_loss_pct": 0.05,
+    "max_daily_loss_pct": 0.02,
+    "max_consecutive_loss_days": 3
+  }
+}

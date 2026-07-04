@@ -1,0 +1,74 @@
+{
+  "000831.SZ": {
+    "entry_price": 53.58,
+    "buy_date": "2026-07-02",
+    "volume": 200,
+    "amount": 10716
+  },
+  "001226.SZ": {
+    "entry_price": 47.74,
+    "buy_date": "2026-07-02",
+    "volume": 300,
+    "amount": 14322
+  },
+  "002245.SZ": {
+    "entry_price": 19.24,
+    "buy_date": "2026-07-02",
+    "volume": 800,
+    "amount": 15392
+  },
+  "002529.SZ": {
+    "entry_price": 7.03,
+    "buy_date": "2026-07-02",
+    "volume": 2200,
+    "amount": 15466
+  },
+  "000697.SZ": {
+    "entry_price": 10.08,
+    "buy_date": "2026-07-02",
+    "volume": 1500,
+    "amount": 15120
+  },
+  "002733.SZ": {
+    "entry_price": 28.37,
+    "buy_date": "2026-07-02",
+    "volume": 500,
+    "amount": 14185
+  },
+  "002947.SZ": {
+    "entry_price": 71.95,
+    "buy_date": "2026-07-02",
+    "volume": 200,
+    "amount": 14390
+  },
+  "002645.SZ": {
+    "entry_price": 25.75,
+    "buy_date": "2026-07-02",
+    "volume": 600,
+    "amount": 15450
+  },
+  "300410.SZ": {
+    "entry_price": 10.64,
+    "buy_date": "2026-07-02",
+    "volume": 1500,
+    "amount": 15960
+  },
+  "002927.SZ": {
+    "entry_price": 18.89,
+    "buy_date": "2026-07-02",
+    "volume": 800,
+    "amount": 15112
+  },
+  "002429.SZ": {
+    "entry_price": 10.50,
+    "buy_date": "2026-07-02",
+    "volume": 1500,
+    "amount": 15750
+  },
+  "001896.SZ": {
+    "entry_price": 17.43,
+    "buy_date": "2026-07-02",
+    "volume": 900,
+    "amount": 15687
+  }
+}

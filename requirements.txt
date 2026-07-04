@@ -1,0 +1,32 @@
+# ============================================================
+# A股量化交易系统 — 核心依赖
+# ============================================================
+
+# ---- Data ----
+akshare>=1.16.0           # A股行情/财务数据采集
+pandas>=2.2.0
+numpy>=2.0.0
+
+# ---- Database ----
+clickhouse-connect>=0.8.0  # ClickHouse Python client
+psycopg2-binary>=2.9.0     # PostgreSQL client
+sqlalchemy>=2.0.0
+
+# ---- Strategy / Backtest ----
+scipy>=1.14.0              # 统计计算（IC分析等）
+ta>=0.11.0                 # 技术指标（MA/MACD/RSI/布林带）
+statsmodels>=0.14.0        # OLS回归等
+
+# ---- Task Scheduling ----
+apscheduler>=3.10.0
+
+# ---- Monitoring ----
+streamlit>=1.38.0
+plotly>=5.24.0
+
+# ---- Notification ----
+requests>=2.32.0           # HTTP for DingTalk/WeChat webhook
+
+# ---- Testing ----
+pytest>=8.3.0
+pytest-cov>=6.0.0
