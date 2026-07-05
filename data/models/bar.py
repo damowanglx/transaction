@@ -49,13 +49,17 @@ class DailyBar:
 
     @property
     def is_limit_up(self) -> bool:
-        """Check if bar hit 10% limit up (main board)."""
-        return self.pct_chg >= 9.9
+        """Check if bar hit its price limit up (10%/20%/5% depending on board)."""
+        limit = 20.0 if self.ts_code.startswith(("688", "300")) else 10.0
+        limit = 5.0 if self.is_st else limit
+        return self.pct_chg >= limit * 0.99  # Small tolerance for float
 
     @property
     def is_limit_down(self) -> bool:
-        """Check if bar hit 10% limit down (main board)."""
-        return self.pct_chg <= -9.9
+        """Check if bar hit its price limit down (10%/20%/5% depending on board)."""
+        limit = 20.0 if self.ts_code.startswith(("688", "300")) else 10.0
+        limit = 5.0 if self.is_st else limit
+        return self.pct_chg <= -(limit * 0.99)
 
 
 @dataclass(frozen=True)

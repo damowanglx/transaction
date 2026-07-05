@@ -62,7 +62,7 @@ def format_report(result: BacktestResult, strategy_name: str = "") -> str:
     lines.append(f"  Max DD Duration:  {result.max_drawdown_duration} days")
 
     # Benchmark
-    if result.benchmark_return != 0:
+    if result.benchmark_return_pct != 0:
         lines.append("")
         lines.append("  —— Benchmark ——")
         lines.append(f"  Benchmark Return: {result.benchmark_return_pct:+.2f}%")

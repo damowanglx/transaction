@@ -85,8 +85,11 @@ def main():
 
     mean_ret = np.mean(returns)
     std_ret = np.std(returns, ddof=1)
-    ci_95 = 1.96 * std_ret / np.sqrt(len(returns))
-    print(f"\n  95% CI for Return: {mean_ret*100:+.1f}% ± {ci_95*100:.1f}%")
+    # t-distribution for n=5 samples (df=4): t_crit = 2.776 at 95%
+    from scipy import stats as scipy_stats
+    t_crit = scipy_stats.t.ppf(0.975, df=len(returns) - 1)
+    ci_95 = t_crit * std_ret / np.sqrt(len(returns))
+    print(f"\n  95% CI for Return (t-dist, df={len(returns)-1}): {mean_ret*100:+.1f}% ± {ci_95*100:.1f}%")
     print(f"  Strategy is profitable at 95% confidence: {'YES' if mean_ret - ci_95 > 0 else 'NO'}")
 
     if all(r > 0 for r in returns):

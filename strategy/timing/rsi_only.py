@@ -95,7 +95,7 @@ class RSIStrategy(BaseStrategy):
             if rsi >= self._rsi_overbought:
                 should_sell = True
                 reason = f"RSI recovered ({rsi:.0f})"
-            elif pnl_pct < -0.05:
+            elif pnl_pct < -self._stop_loss:
                 should_sell = True
                 reason = f"Stop loss ({pnl_pct*100:.1f}%)"
             elif code not in top_codes:

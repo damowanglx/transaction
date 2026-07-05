@@ -128,7 +128,8 @@ def momentum_factor_bundle(
         DataFrame with columns: ts_code, trade_date,
         mom_20, mom_60, mom_120, rsi_14, risk_adj_mom_60, rel_str_60
     """
-    # Pivot to wide format: dates x stocks
+    # Pivot to wide format: dates x stocks (dedup first to avoid pivot errors)
+    price_df = price_df.drop_duplicates(subset=["trade_date", "ts_code"])
     prices_wide = price_df.pivot(index="trade_date", columns="ts_code", values="close")
 
     results = []

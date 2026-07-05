@@ -154,9 +154,13 @@ class TrendFollowStrategy(BaseStrategy):
                 close = subset.sort_values("trade_date")["close"]
                 current_price = close.iloc[-1]
                 ma_trend_val = close.rolling(self._ma_trend).mean().iloc[-1]
-                if current_price < ma_trend_val:
-                    # Already not in top, but double-check
-                    pass  # The "fell out" logic above handles this
+                if current_price < ma_trend_val and code not in {s.ts_code for s in signals}:
+                    signals.append(Signal(
+                        ts_code=code, signal_type=SignalType.SELL,
+                        confidence=0.8,
+                        reason=f"Price broke below MA{self._ma_trend}",
+                        target_weight=0.0, timestamp=current_date,
+                    ))
 
         return signals
 

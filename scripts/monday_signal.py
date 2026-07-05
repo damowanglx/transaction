@@ -169,5 +169,6 @@ sell_codes = {s.ts_code for s in sells}
 for code, pos in current_positions.items():
     if code not in sell_codes and code not in new_positions:
         new_positions[code] = pos
-pos_file.write_text(json.dumps(new_positions, indent=2, ensure_ascii=False))
+from config.settings import atomic_write_json
+atomic_write_json(str(pos_file), new_positions, indent=2, ensure_ascii=False)
 print(f"\n持仓已更新: {len(new_positions)} 只 → scripts/positions.json")

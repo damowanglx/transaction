@@ -77,27 +77,35 @@ class MomentumRotation(BaseStrategy):
                     timestamp=current_date,
                 ))
 
-        # Sell stocks that fell out of top momentum
+        # Sell stocks that fell out of top momentum or momentum turned negative
+        sell_codes = set()
         for code in self.holdings:
-            if code not in top_codes:
-                signals.append(Signal(
-                    ts_code=code, signal_type=SignalType.SELL,
-                    confidence=0.7,
-                    reason="Momentum faded — fell out of top",
-                    target_weight=0.0, timestamp=current_date,
-                ))
+            if code in sell_codes:
+                continue  # Already generated sell for this stock today
 
-            # Also sell if momentum turned negative
+            should_sell = False
+            reason = ""
+            conf = 0.7
+
+            if code not in top_codes:
+                should_sell = True
+                reason = "Momentum faded — fell out of top"
+
             subset = data[data["ts_code"] == code].sort_values("trade_date")
             if not subset.empty and len(subset["close"]) >= self._mom_period:
                 close = subset["close"]
                 mom = (close.iloc[-1] / close.iloc[-self._mom_period] - 1.0)
                 if mom < -0.05:  # -5% momentum → cut loss
-                    signals.append(Signal(
-                        ts_code=code, signal_type=SignalType.SELL,
-                        confidence=0.8,
-                        reason=f"Momentum reversed ({mom*100:.1f}%)",
-                        target_weight=0.0, timestamp=current_date,
-                    ))
+                    should_sell = True
+                    reason = f"Momentum reversed ({mom*100:.1f}%)"
+                    conf = 0.8
+
+            if should_sell:
+                sell_codes.add(code)
+                signals.append(Signal(
+                    ts_code=code, signal_type=SignalType.SELL,
+                    confidence=conf, reason=reason,
+                    target_weight=0.0, timestamp=current_date,
+                ))
 
         return signals
