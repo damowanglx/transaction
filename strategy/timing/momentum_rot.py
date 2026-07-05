@@ -9,6 +9,7 @@ from datetime import date
 import numpy as np
 import pandas as pd
 
+from strategy.timing._rsi import calc_rsi
 from strategy.base.strategy_template import BaseStrategy, Signal, SignalType
 
 

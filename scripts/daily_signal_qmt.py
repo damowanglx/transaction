@@ -27,8 +27,8 @@ def main(dry_run: bool = True):
     all_codes = xtdata.get_stock_list_in_sector("沪深A股")
     logger.info("QMT universe: %d stocks", len(all_codes))
 
-    # 2. Download 1 year history for a sample (full download would be slow)
-    sample = all_codes  # Use full universe — QMT is fast enough
+    # 2. Download 1 year history — QMT xtdata handles full universe efficiently
+    sample = all_codes
     logger.info("Downloading %d stocks history...", len(sample))
 
     end_str = today.strftime("%Y%m%d")
@@ -136,7 +136,8 @@ def main(dry_run: bool = True):
     for code, pos in current_positions.items():
         if code not in sell_codes and code not in new_positions:
             new_positions[code] = pos
-    pos_file.write_text(json.dumps(new_positions, indent=2, ensure_ascii=False))
+    from config.settings import atomic_write_json
+    atomic_write_json(str(pos_file), new_positions, indent=2, ensure_ascii=False)
 
 
 if __name__ == "__main__":

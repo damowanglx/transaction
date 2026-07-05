@@ -104,17 +104,6 @@ class StockSelector(BaseStrategy):
         super().init(**params)
 
     def on_data(self, data: pd.DataFrame, current_date: date) -> list[Signal]:
-        """Run factor scoring and generate signals for a trading date.
-
-        Args:
-            data: DataFrame with factor columns. Must contain:
-                  ts_code, trade_date, forward_return_5d (for IC),
-                  and all factor columns specified in init().
-            current_date: The trading date.
-
-        Returns:
-            List of buy/sell signals.
-        """
         if not self._factor_names:
             logger.warning("No factors configured — returning empty signals")
             return []

@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 
 from strategy.base.strategy_template import BaseStrategy, Signal, SignalType
+from strategy.timing._rsi import calc_rsi
 
 
 class RSIStrategy(BaseStrategy):
@@ -113,5 +114,4 @@ class RSIStrategy(BaseStrategy):
 
     @staticmethod
     def _calc_rsi(prices: pd.Series, period: int = 14) -> float:
-        from strategy.timing._rsi import calc_rsi
         return calc_rsi(prices, period)

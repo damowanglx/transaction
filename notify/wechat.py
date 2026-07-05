@@ -90,4 +90,4 @@ class WeChatNotifier:
             if result.get("errcode") != 0:
                 logger.error("WeChat send failed: %s", result.get("errmsg"))
         except Exception:
-            logger.exception("WeChat send error")
+            logger.warning("WeChat send failed — webhook may not be configured")

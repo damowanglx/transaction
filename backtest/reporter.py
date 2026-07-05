@@ -79,11 +79,13 @@ def format_report(result: BacktestResult, strategy_name: str = "") -> str:
     lines.append("")
 
     # Signal quality
+    lines.append("  —— Signal Quality ——")
     if result.signals_generated > 0:
-        lines.append("  —— Signal Quality ——")
         lines.append(f"  Signals Generated: {result.signals_generated}")
         lines.append(f"  Signals Rejected:  {result.signals_rejected} ({result.signals_rejected/max(result.signals_generated,1)*100:.0f}%)")
         lines.append(f"  Signals Executed:  {result.signals_executed} ({result.signals_executed/max(result.signals_generated,1)*100:.0f}%)")
+    else:
+        lines.append("  No signals generated")
     lines.append("")
 
     # Verdict

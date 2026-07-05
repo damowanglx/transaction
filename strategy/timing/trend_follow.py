@@ -19,6 +19,7 @@ import numpy as np
 import pandas as pd
 
 from strategy.base.strategy_template import BaseStrategy, Signal, SignalType
+from strategy.timing._rsi import calc_rsi
 
 # Use ta library for technical indicators where available
 try:
@@ -166,5 +167,4 @@ class TrendFollowStrategy(BaseStrategy):
 
     @staticmethod
     def _calc_rsi(prices: pd.Series, period: int = 14) -> float:
-        from strategy.timing._rsi import calc_rsi
         return calc_rsi(prices, period)

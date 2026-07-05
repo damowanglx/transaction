@@ -19,6 +19,7 @@ import numpy as np
 import pandas as pd
 
 from strategy.base.strategy_template import BaseStrategy, Signal, SignalType
+from strategy.timing._rsi import calc_rsi
 
 
 class MeanRevertStrategy(BaseStrategy):
@@ -259,7 +260,9 @@ class MeanRevertStrategy(BaseStrategy):
             should_sell = False
             sell_reason = ""
 
-            # Reverted to mean
+            # Reverted to mean (sells at mid-band; raise threshold for stronger hold)
+            # NOTE: bb_position > 0.5 means price has touched the Bollinger mid-band.
+            # For trend-following reverts, consider raising to 0.7+ to capture more upside.
             if bb_position > 0.5 and current_price > entry_price:
                 should_sell = True
                 sell_reason = f"reverted to mean (BB pos={bb_position:.2f})"
@@ -324,5 +327,4 @@ class MeanRevertStrategy(BaseStrategy):
 
     @staticmethod
     def _calc_rsi(prices: pd.Series, period: int = 14) -> float:
-        from strategy.timing._rsi import calc_rsi
         return calc_rsi(prices, period)
