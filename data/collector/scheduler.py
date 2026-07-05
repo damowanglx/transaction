@@ -105,7 +105,7 @@ class DataScheduler:
     def stop(self):
         """Gracefully stop the scheduler."""
         logger.info("Stopping data scheduler...")
-        self._scheduler.shutdown(wait=True)
+        self._scheduler.shutdown(wait=False)
         logger.info("Data scheduler stopped")
 
     @property

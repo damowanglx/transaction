@@ -52,7 +52,8 @@ def risk_adjusted_momentum(
     returns = prices.pct_change()
     rolling_ret = prices.pct_change(periods=period)
     rolling_vol = returns.rolling(period).std() * np.sqrt(ann_factor)
-    result = rolling_ret / rolling_vol.replace(0, np.nan)
+    # Avoid division by near-zero volatility (clip at minimum)
+    result = rolling_ret / rolling_vol.clip(lower=1e-10)
     return result
 
 
@@ -68,7 +69,7 @@ def rsi(prices: pd.Series, period: int = 14) -> pd.Series:
     avg_gain = gain.rolling(period).mean()
     avg_loss = loss.rolling(period).mean()
 
-    rs = avg_gain / avg_loss.replace(0, np.nan)
+    rs = avg_gain / avg_loss.clip(lower=1e-10)
     rsi_values = 100.0 - (100.0 / (1.0 + rs))
     return rsi_values
 
@@ -151,7 +152,7 @@ def momentum_factor_bundle(
         macd_data = macd(stock_prices)
         df["macd_hist"] = macd_data["histogram"]
 
-        if benchmark_df is not None:
+        if benchmark_df is not None and not benchmark_df.empty and "close" in benchmark_df.columns:
             bench_prices = benchmark_df.set_index("trade_date")["close"]
             aligned = pd.concat([stock_prices, bench_prices], axis=1).dropna()
             if not aligned.empty:

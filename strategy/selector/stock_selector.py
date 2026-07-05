@@ -164,7 +164,7 @@ class StockSelector(BaseStrategy):
             n = len(self._factor_names)
             return {f: 1.0 / n for f in self._factor_names} if n > 0 else {}
 
-        recent = data[data["trade_date"] >= data["trade_date"].max() - pd.Timedelta(days=self._lookback_days)]
+        recent = data[data["trade_date"] >= data["trade_date"].max() - pd.Timedelta(days=self._lookback_days + 20)]
 
         for factor in self._factor_names:
             if factor not in recent.columns:
@@ -308,8 +308,6 @@ class StockSelector(BaseStrategy):
             # Compute rolling IC by date
             ics = []
             rank_ics = []
-            dates = valid.index.unique() if isinstance(valid.index, pd.DatetimeIndex) else []
-
             for d in data["trade_date"].unique():
                 day_data = data[data["trade_date"] == d][[factor, forward_col]].dropna()
                 if len(day_data) < 10:

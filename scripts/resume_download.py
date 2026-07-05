@@ -15,7 +15,7 @@ ch = get_clickhouse_client()
 r = ch.client.query("SELECT DISTINCT ts_code FROM daily_bars")
 done = set()
 for row in r.result_rows:
-    code = row[0].replace(".SH", "").replace(".SZ", "")
+    code = row[0].replace(".SH", "").replace(".SZ", "").replace(".BJ", "")
     done.add(code)
 
 stocks = fetch_stock_list()

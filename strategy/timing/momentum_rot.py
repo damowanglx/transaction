@@ -27,7 +27,6 @@ class MomentumRotation(BaseStrategy):
         self._top_n = 10
         self._rebalance_days = 20
         self._min_price = 5.0
-        self._last_rebalance: dict[str, date] = {}
 
     def init(self, **params) -> None:
         self._mom_period = params.get("mom_period", 60)
@@ -98,13 +97,17 @@ class MomentumRotation(BaseStrategy):
                 reason = "Momentum faded — fell out of top"
 
             subset = data[data["ts_code"] == code].sort_values("trade_date")
-            if not subset.empty and len(subset["close"]) >= self._mom_period:
-                close = subset["close"]
-                mom = (close.iloc[-1] / close.iloc[-self._mom_period] - 1.0)
-                if mom < -0.05:  # -5% momentum → cut loss
-                    should_sell = True
-                    reason = f"Momentum reversed ({mom*100:.1f}%)"
-                    conf = 0.8
+            if not subset.empty and len(subset) >= self._mom_period:
+                lookback_date = current_date - pd.Timedelta(days=self._mom_period)
+                close_before = subset[subset["trade_date"] <= pd.Timestamp(lookback_date)]
+                if not close_before.empty:
+                    ref_price = close_before["close"].iloc[-1]
+                    current_price = subset["close"].iloc[-1]
+                    mom = (current_price / ref_price - 1.0) if ref_price > 0 else 0.0
+                    if mom < -0.05:  # -5% momentum → cut loss
+                        should_sell = True
+                        reason = f"Momentum reversed ({mom*100:.1f}%)"
+                        conf = 0.8
 
             if should_sell:
                 sell_codes.add(code)

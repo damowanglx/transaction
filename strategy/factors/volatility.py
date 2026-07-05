@@ -149,10 +149,10 @@ def volatility_factor_bundle(
         df["downside_dev_60"] = downside_deviation(close, 60).values
         df["max_dd_60"] = max_drawdown(close, 60).values
 
-        if market_prices is not None:
-            aligned_close = pd.Series(close.values, index=close.index)
-            aligned_market = pd.Series(market_prices.values, index=market_prices.index)
-            df["beta_60"] = beta(aligned_close, aligned_market, 60).values
+        if market_prices is not None and len(market_prices) == len(close):
+            # Align by reindexing market to stock's dates
+            aligned_market = market_prices.reindex(close.index)
+            df["beta_60"] = beta(close, aligned_market, 60).values
 
         results.append(df)
 

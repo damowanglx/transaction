@@ -64,7 +64,7 @@ def get_positions() -> pd.DataFrame:
         return pd.DataFrame(columns=["ts_code", "name", "volume", "avg_cost", "current_price", "market_value", "pnl_pct"])
 
     try:
-        # Get latest trades to infer current holdings
+        # Try PostgreSQL first, fall back to ClickHouse
         from sqlalchemy import text
         with pg.engine.connect() as conn:
             result = conn.execute(text("""

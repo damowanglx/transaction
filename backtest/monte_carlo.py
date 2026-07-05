@@ -122,22 +122,29 @@ def print_mc_report(result: MCResult) -> str:
 
 
 def run_from_backtest_result(result_json_path: str):
-    """Load backtest result JSON and run Monte Carlo on it."""
+    """Load backtest result JSON and run Monte Carlo on it.
+
+    WARNING: This function estimates daily return std from max_drawdown
+    using a heuristic formula. Results are APPROXIMATE and should be
+    used for rough risk assessment only — not position sizing decisions.
+    """
     import json
-    from backtest.engine import BacktestResult, DailyRecord
 
     with open(result_json_path) as f:
         data = json.load(f)
 
-    # We need daily returns — try loading from the full result
-    # Fallback: simulate from reported stats
+    # Heuristic: estimate daily std from max drawdown (rough approximation)
+    # Better to use actual daily returns from equity curve when available
     daily_return_mean = data["total_return"] / data["n_days"]
     daily_return_std = abs(data["max_drawdown"]) / (2.5 * np.sqrt(data["n_days"]))
 
-    print(f"Using estimated daily stats: mean={daily_return_mean*100:.3f}% std={daily_return_std*100:.2f}%")
+    print(f"WARNING: Using heuristic std estimate from max DD (daily σ ≈ {daily_return_std*100:.2f}%)")
+    print(f"  For accurate results, run Monte Carlo on actual daily equity curve.")
 
     rng = np.random.default_rng(42)
-    synthetic_returns = pd.Series(rng.normal(daily_return_mean, daily_return_std, data["n_days"]))
+    synthetic_returns = pd.Series(
+        rng.normal(daily_return_mean, daily_return_std, data["n_days"])
+    )
 
     result = monte_carlo_simulate(synthetic_returns, data["initial_cash"])
     print(print_mc_report(result))

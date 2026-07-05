@@ -66,8 +66,9 @@ def bollinger_bands(
     position = (close - lower) / (upper - lower).replace(0, np.nan)
     width = (upper - lower) / middle.replace(0, np.nan)
 
-    # Squeeze: bandwidth at 20-period minimum
-    squeeze = width.rolling(20).min() == width
+    # Squeeze: bandwidth at 20-period minimum (use tolerance for float comparison)
+    width_min = width.rolling(20).min()
+    squeeze = (width - width_min).abs() < 1e-10
 
     return pd.DataFrame({
         "bb_upper": upper,
@@ -102,6 +103,7 @@ def obv(close: pd.Series, volume: pd.Series) -> pd.Series:
     OBV rising = accumulation, OBV falling = distribution.
     """
     direction = np.sign(close.diff())
+    direction = direction.copy()
     direction.iloc[0] = 0
     return (direction * volume).cumsum()
 
