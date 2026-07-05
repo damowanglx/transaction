@@ -29,7 +29,8 @@ def load_segment(start: date, end: date, n_stocks: int = 500):
     ch = get_clickhouse_client()
     codes = ch.get_all_codes_on_date(min(end, date.today()))
     import random
-    random.seed(42)
+    import time as _time
+    random.seed(int(_time.time() * 1000) % (2**31))
     codes = random.sample(codes, min(len(codes), n_stocks))
     df = ch.client.query_df(
         "SELECT ts_code, trade_date, open, high, low, close, vol, amount, turnover_rate "

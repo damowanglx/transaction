@@ -21,6 +21,10 @@ Thumbs.db
 logs/
 reports/
 .pytest_cache/
+params_history/
+*.log
+config/user_config.json
+config/halt.json
 
 # Docker
 docker-compose.override.yml

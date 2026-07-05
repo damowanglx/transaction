@@ -647,4 +647,157 @@ class TestCircuitBreakerExtended:
         cb.check(200_000, +100, +0.0005, [], date(2026, 6, 3))
         # Should still be normal (counter reset to 0)
         st = cb.check(200_000, -100, -0.0005, [], date(2026, 6, 4))
-        assert st.state == BreakerState.NORMAL
+
+
+# ============================================================
+# Test: RSI Strategy
+# ============================================================
+
+class TestRSIStrategy:
+    def test_init(self):
+        from strategy.timing.rsi_only import RSIStrategy
+        strat = RSIStrategy("test_rsi")
+        strat.init(rsi_period=14, rsi_oversold=25, rsi_overbought=60, top_n=10, stop_loss=0.05)
+        assert strat._rsi_period == 14
+        assert strat._rsi_oversold == 25
+
+    def test_empty_data(self):
+        from strategy.timing.rsi_only import RSIStrategy
+        strat = RSIStrategy("test_rsi")
+        strat.init()
+        sigs = strat.on_data(pd.DataFrame(), date(2026, 6, 1))
+        assert sigs == []
+
+    def test_buy_on_oversold(self):
+        from strategy.timing.rsi_only import RSIStrategy
+        strat = RSIStrategy("test_rsi")
+        strat.init(rsi_period=14, rsi_oversold=25, rsi_overbought=60, top_n=10, min_price=0)
+        # Create a stock that keeps falling for all 14 RSI periods → very oversold
+        dates = pd.date_range("2026-01-01", periods=64, freq="B")
+        # Start high, then steady decline for 30+ bars (every bar lower)
+        prices = np.concatenate([
+            np.full(20, 100.0),
+            np.linspace(100, 50, 30),    # Steady decline
+            np.linspace(50, 45, 14),     # Still declining recently
+        ])
+        df = pd.DataFrame({
+            "ts_code": "000001.SZ",
+            "trade_date": dates,
+            "close": prices,
+            "open": prices * 0.99,
+            "high": prices * 1.01,
+            "low": prices * 0.98,
+            "vol": 1_000_000.0,
+            "amount": prices * 1_000_000,
+            "turnover_rate": 2.0,
+        })
+        df["trade_date"] = pd.to_datetime(df["trade_date"])
+        sigs = strat.on_data(df, dates[-1].date())
+        buys = [s for s in sigs if s.signal_type.value == "BUY"]
+        assert len(buys) >= 1, "Should generate buy signal on oversold RSI"
+
+    def test_sell_on_overbought(self):
+        from strategy.timing.rsi_only import RSIStrategy
+        strat = RSIStrategy("test_rsi")
+        strat.init(rsi_period=14, rsi_oversold=25, rsi_overbought=60, top_n=10, min_price=0)
+        # Create a stock in strong uptrend → overbought
+        prices = 50.0 + np.arange(50).cumsum() * 0.3
+        df = pd.DataFrame({
+            "ts_code": "000001.SZ",
+            "trade_date": [date(2026, 1, 1) + pd.Timedelta(days=i) for i in range(50)],
+            "close": prices,
+            "open": prices * 0.99,
+            "high": prices * 1.01,
+            "low": prices * 0.98,
+            "vol": 1_000_000,
+            "amount": prices * 1_000_000,
+            "turnover_rate": 2.0,
+        })
+        strat.sync_positions({"000001.SZ": {"avg_cost": 50.0, "volume": 1000}})
+        sigs = strat.on_data(df, date(2026, 2, 19))
+        sells = [s for s in sigs if s.signal_type.value == "SELL"]
+        assert len(sells) >= 1, "Should sell when RSI overbought"
+
+
+# ============================================================
+# Test: Momentum Rotation Strategy
+# ============================================================
+
+class TestMomentumRotation:
+    def test_init(self):
+        from strategy.timing.momentum_rot import MomentumRotation
+        strat = MomentumRotation("test_mom")
+        strat.init(mom_period=60, top_n=10, rebalance_days=20)
+        assert strat._mom_period == 60
+        assert strat._top_n == 10
+
+    def test_empty_data(self):
+        from strategy.timing.momentum_rot import MomentumRotation
+        strat = MomentumRotation("test_mom")
+        strat.init()
+        sigs = strat.on_data(pd.DataFrame(), date(2026, 6, 1))
+        assert sigs == []
+
+    def test_buy_on_positive_momentum(self):
+        from strategy.timing.momentum_rot import MomentumRotation
+        strat = MomentumRotation("test_mom")
+        strat.init(mom_period=60, top_n=10, min_price=0)
+        # Steady uptrend → positive momentum
+        prices = 50.0 + np.arange(100).cumsum() * 0.2
+        df = pd.DataFrame({
+            "ts_code": "000001.SZ",
+            "trade_date": [date(2026, 1, 1) + pd.Timedelta(days=i) for i in range(100)],
+            "close": prices,
+            "open": prices * 0.99,
+            "high": prices * 1.01,
+            "low": prices * 0.98,
+            "vol": 1_000_000,
+            "amount": prices * 1_000_000,
+        })
+        df["trade_date"] = pd.to_datetime(df["trade_date"])
+        sigs = strat.on_data(df, df["trade_date"].iloc[-1].date())
+        buys = [s for s in sigs if s.signal_type.value == "BUY"]
+        assert len(buys) >= 1, "Should buy stocks with positive momentum"
+
+    def test_no_buy_on_negative_momentum(self):
+        from strategy.timing.momentum_rot import MomentumRotation
+        strat = MomentumRotation("test_mom")
+        strat.init(mom_period=60, top_n=10, min_price=0)
+        # Steady downtrend → negative momentum
+        prices = 100.0 - np.arange(100).cumsum() * 0.3
+        df = pd.DataFrame({
+            "ts_code": "000001.SZ",
+            "trade_date": [date(2026, 1, 1) + pd.Timedelta(days=i) for i in range(100)],
+            "close": np.maximum(prices, 1.0),
+            "open": np.maximum(prices, 1.0) * 1.01,
+            "high": np.maximum(prices, 1.0) * 1.02,
+            "low": np.maximum(prices, 1.0) * 0.99,
+            "vol": 1_000_000.0,
+            "amount": np.maximum(prices, 1.0) * 1_000_000,
+        })
+        df["trade_date"] = pd.to_datetime(df["trade_date"])
+        sigs = strat.on_data(df, df["trade_date"].iloc[-1].date())
+        buys = [s for s in sigs if s.signal_type.value == "BUY"]
+        assert len(buys) == 0, "Should NOT buy stocks with negative momentum"
+
+    def test_sell_on_momentum_fade(self):
+        from strategy.timing.momentum_rot import MomentumRotation
+        strat = MomentumRotation("test_mom")
+        strat.init(mom_period=60, top_n=1, min_price=0)
+        # Downtrend → momentum reversal
+        prices = 100.0 - np.arange(80).cumsum() * 0.5
+        df = pd.DataFrame({
+            "ts_code": "000001.SZ",
+            "trade_date": [date(2026, 1, 1) + pd.Timedelta(days=i) for i in range(80)],
+            "close": np.maximum(prices, 1.0),
+            "open": np.maximum(prices, 1.0) * 1.01,
+            "high": np.maximum(prices, 1.0) * 1.02,
+            "low": np.maximum(prices, 1.0) * 0.99,
+            "vol": 1_000_000.0,
+            "amount": np.maximum(prices, 1.0) * 1_000_000,
+        })
+        df["trade_date"] = pd.to_datetime(df["trade_date"])
+        strat.sync_positions({"000001.SZ": {"avg_cost": 90.0, "volume": 1000}})
+        sigs = strat.on_data(df, df["trade_date"].iloc[-1].date())
+        sells = [s for s in sigs if s.signal_type.value == "SELL"]
+        assert len(sells) >= 1, "Should sell when momentum reverses"

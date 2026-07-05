@@ -31,7 +31,9 @@ def main():
 
     codes = ch.get_all_codes_on_date(end)
     codes = [c for c in codes if c != '000300.SH']
-    import random; random.seed(42)
+    import random
+    import time as _time
+    random.seed(int(_time.time() * 1000) % (2**31))
     codes = random.sample(codes, min(len(codes), 500))
 
     logger.info("Loading %d stocks from %s to %s", len(codes), start, end)

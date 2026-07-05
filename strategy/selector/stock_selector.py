@@ -244,14 +244,17 @@ class StockSelector(BaseStrategy):
     ) -> list[Signal]:
         """Generate buy/sell signals by comparing to current positions."""
         signals = []
+        # Precompute rank map to avoid O(n²) list.index() lookups
+        rank_map = {code: i + 1 for i, (code, _) in enumerate(ranked)}
 
         for code, score in ranked[:self._top_n]:
             if code not in self._current_positions:
+                rank = rank_map.get(code, 0)
                 signals.append(Signal(
                     ts_code=code,
                     signal_type=SignalType.BUY,
                     confidence=min(score / 3.0 + 0.5, 1.0) if score > 0 else 0.5,
-                    reason=f"Selected #{(self._top_n - (self._top_n - ranked.index((code, score))))}, score={score:.3f}",
+                    reason=f"Selected #{rank}, score={score:.3f}",
                     target_weight=1.0 / self._top_n,
                     timestamp=current_date,
                 ))

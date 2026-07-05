@@ -54,8 +54,14 @@ class MomentumRotation(BaseStrategy):
             if price < self._min_price:
                 continue
 
-            # Compute momentum: return over the lookback period
-            mom_ret = (close.iloc[-1] / close.iloc[-self._mom_period] - 1.0) if len(close) >= self._mom_period else 0.0
+            # Compute momentum using date-based lookback (not position index)
+            lookback_date = current_date - pd.Timedelta(days=self._mom_period)
+            close_before = subset[subset["trade_date"] <= pd.Timestamp(lookback_date)]
+            if not close_before.empty:
+                ref_price = close_before["close"].iloc[-1]
+                mom_ret = (close.iloc[-1] / ref_price - 1.0) if ref_price > 0 else 0.0
+            else:
+                mom_ret = 0.0
             if mom_ret <= 0:
                 continue  # Only buy positive momentum
 

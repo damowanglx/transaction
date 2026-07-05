@@ -9,7 +9,7 @@ import pandas as pd
 from dataclasses import dataclass
 
 
-@dataclass
+@dataclass(frozen=True)
 class MCResult:
     """Monte Carlo simulation results."""
     median_return: float       # Median final return

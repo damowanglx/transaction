@@ -39,12 +39,14 @@ def show_positions():
     c1, c2, c3, c4 = st.columns(4)
     total_mv = positions_df["market_value"].sum()
     total_pnl = (positions_df["current_price"] * positions_df["net_volume"]).sum() - (positions_df["avg_cost"] * positions_df["net_volume"]).sum()
-    cash = 200_000 - total_mv
+    # Estimate cash from total MV (assume 80% invested)
+    total_capital = total_mv / 0.80 if total_mv > 0 else 200_000
+    cash = total_capital - total_mv
 
     c1.metric("总市值", f"¥{total_mv:,.0f}")
     c2.metric("可用资金", f"¥{cash:,.0f}")
     c3.metric("持仓盈亏", f"¥{total_pnl:+,.0f}")
-    c4.metric("仓位比例", f"{total_mv/200000*100:.1f}%" if total_mv > 0 else "0%")
+    c4.metric("仓位比例", f"{total_mv/total_capital*100:.1f}%" if total_mv > 0 else "0%")
 
     # Allocation chart
     if total_mv > 0:

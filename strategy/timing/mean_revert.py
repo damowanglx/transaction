@@ -65,6 +65,17 @@ class MeanRevertStrategy(BaseStrategy):
         self._vol_target = params.get("vol_target", 0.15)        # Target annual volatility (15%)
         self._use_vol_target = params.get("use_vol_target", True) # Adaptive position sizing
         self._green_candle = params.get("green_candle", True)      # Require green candle for entry
+        # Warn about unknown parameters that would silently do nothing
+        known = {
+            "bb_period", "bb_std", "rsi_oversold", "rsi_overbought", "volume_min",
+            "top_n", "stop_loss", "take_profit", "min_price", "min_turnover",
+            "ma_trend", "vol_spike", "bb_entry", "market_regime", "market_data",
+            "atr_mult", "use_atr_stop", "vol_target", "use_vol_target", "green_candle",
+            "current_holdings",
+        }
+        unknown = set(params.keys()) - known
+        if unknown:
+            logger.warning("MeanRevertStrategy: ignoring unknown params: %s", unknown)
         super().init(**params)
 
     def on_data(self, data: pd.DataFrame, current_date: date) -> list[Signal]:

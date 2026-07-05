@@ -41,11 +41,23 @@ def main(strategy: str = "trend_follow", dry_run: bool = False):
     logger.info("Daily Signal Generation — %s", date.today())
     logger.info("=" * 50)
 
-    # 1. Load data
+    # 1. Check if today is a trading day
     ch = get_clickhouse_client()
     if not ch.ping():
         logger.error("ClickHouse not reachable — abort")
         return
+
+    r = ch.client.query("SELECT max(trade_date) FROM daily_bars")
+    latest_db = r.first_row[0]
+    if isinstance(latest_db, str):
+        from datetime import datetime
+        latest_db = datetime.strptime(latest_db, "%Y-%m-%d").date()
+    today = date.today()
+    if today.weekday() >= 5:
+        logger.info("Today is weekend, skipping signal generation. Latest DB: %s", latest_db)
+        return
+    if latest_db and latest_db < today - timedelta(days=1):
+        logger.warning("DB data is stale (latest=%s, today=%s). Run download_incremental first.", latest_db, today)
 
     # Filter to dates with actual data
     import random

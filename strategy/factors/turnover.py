@@ -117,7 +117,7 @@ def turnover_factor_bundle(
 
         vol = subset["vol"]
         close = subset["close"]
-        turnover = subset.get("turnover_rate", pd.Series([np.nan] * len(subset)))
+        turnover = subset.get("turnover_rate", pd.Series([np.nan] * len(subset), index=subset.index))
 
         df["avg_turn_5"] = avg_turnover(turnover, 5).values
         df["avg_turn_20"] = avg_turnover(turnover, 20).values

@@ -8,7 +8,7 @@ services:
       - "9009:9009"   # Inter-server
     volumes:
       - clickhouse_data:/var/lib/clickhouse
-      - ./scripts/init_db.sql:/docker-entrypoint-initdb.d/init_db.sql
+      - ./scripts/init_clickhouse.sql:/docker-entrypoint-initdb.d/init_clickhouse.sql
     environment:
       CLICKHOUSE_DB: quant
       CLICKHOUSE_USER: quant
@@ -27,7 +27,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./scripts/init_db.sql:/docker-entrypoint-initdb.d/init_db.sql
+      - ./scripts/init_postgres.sql:/docker-entrypoint-initdb.d/init_postgres.sql
     environment:
       POSTGRES_DB: quant
       POSTGRES_USER: quant
