@@ -22,7 +22,7 @@ class RiskConfig:
     take_profit_pct: float = 0.15           # Take profit signal at +15%
 
     # ---- Circuit Breaker ----
-    max_daily_loss_pct: float = 0.02        # Meltdown if daily loss > 2% of capital
+    max_daily_loss_pct: float = 0.035       # Meltdown if daily loss > 3.5% of capital
     max_consecutive_loss_days: int = 3      # Pause after N consecutive loss days
     pause_duration_days: int = 7           # Trading pause after meltdown (~5 trading days)
 

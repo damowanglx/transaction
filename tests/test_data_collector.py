@@ -269,7 +269,7 @@ class TestRiskConfig:
         from config.risk_params import DEFAULT_RISK_CONFIG
 
         assert DEFAULT_RISK_CONFIG.max_single_position_pct == 0.20
-        assert DEFAULT_RISK_CONFIG.max_daily_loss_pct == 0.02
+        assert DEFAULT_RISK_CONFIG.max_daily_loss_pct == 0.035
         assert DEFAULT_RISK_CONFIG.exclude_st is True
 
     def test_config_immutable(self):
