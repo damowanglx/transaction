@@ -64,7 +64,7 @@ def load_data_from_clickhouse(start_date: date, end_date: date, sample_stocks: i
 
     # Sample for speed (0 = use all)
     import random
-    random.seed(42)
+    random.seed(int(time.time() * 1000) % (2**31) if 'time' in dir() else 42)
     if sample_stocks > 0 and len(codes) > sample_stocks:
         codes = random.sample(codes, sample_stocks)
 

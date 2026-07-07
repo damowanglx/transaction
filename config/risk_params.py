@@ -5,7 +5,10 @@ CRITICAL: These parameters are the LAST LINE OF DEFENSE.
 Do not relax them lightly.
 """
 
+import logging
 from dataclasses import dataclass, field
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)

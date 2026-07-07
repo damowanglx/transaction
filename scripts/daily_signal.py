@@ -102,7 +102,8 @@ def main(strategy: str = "trend_follow", dry_run: bool = False):
 
     # Filter to dates with actual data
     import random
-    random.seed(42)
+    import time as _time
+    random.seed(int(_time.time() * 1000) % (2**31))
     r = ch.client.query("SELECT max(trade_date) FROM daily_bars WHERE ts_code != '000300.SH'")
     last_trade_date = r.first_row[0]
     if isinstance(last_trade_date, str):
@@ -249,8 +250,6 @@ def main(strategy: str = "trend_follow", dry_run: bool = False):
                  sum(1 for s in signals if s.signal_type.value == "BUY"),
                  sum(1 for s in signals if s.signal_type.value == "SELL"),
                  len(all_buys))
-
-    signals = strat.on_data(df, end_date)
 
     # Market gate: filter out buys when market is in downtrend
     if not market_ok:

@@ -22,7 +22,8 @@ print(f"全市场: {len(codes)} 只")
 
 # Sample 2000 by liquidity (skip ST, use all for speed)
 import random
-random.seed(42)
+import time as _time
+random.seed(int(_time.time() * 1000) % (2**31))
 sample = random.sample(codes, min(len(codes), 2000))
 print(f"采样: {len(sample)} 只")
 

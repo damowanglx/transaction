@@ -167,16 +167,19 @@ def main(dry_run: bool = True):
                         sig.signal_type.value, sig.ts_code, shares, price, sig.reason[:40])
         else:
             try:
-                if sig.signal_type.value == "BUY":
-                    order_id = xttrader.order_stock(
-                        "", sig.ts_code, 0, shares, 0, price, "mean_revert", "auto"
-                    )
+                from live.qmt_adapter import get_trade_adapter
+                adapter = get_trade_adapter()
+                if adapter.is_available():
+                    if sig.signal_type.value == "BUY":
+                        order_id = adapter.buy(sig.ts_code, price, shares)
+                    else:
+                        order_id = adapter.sell(sig.ts_code, price, shares)
+                    logger.info("ORDER %s %s %d@%.2f → #%s",
+                                sig.signal_type.value, sig.ts_code, shares, price, order_id)
                 else:
-                    order_id = xttrader.order_stock(
-                        "", sig.ts_code, 0, shares, 0, price, "mean_revert", "auto"
-                    )
-                logger.info("ORDER %s %s %d@%.2f → #%s",
-                            sig.signal_type.value, sig.ts_code, shares, price, order_id)
+                    logger.error("QMT trade adapter unavailable — order skipped")
+                    rejected += 1
+                    continue
             except Exception as e:
                 logger.error("ORDER FAILED %s: %s", sig.ts_code, e)
                 rejected += 1

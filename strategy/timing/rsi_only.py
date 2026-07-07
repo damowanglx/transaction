@@ -37,6 +37,7 @@ class RSIStrategy(BaseStrategy):
         self._top_n = params.get("top_n", 10)
         self._min_price = params.get("min_price", 5.0)
         self._min_turnover = params.get("min_turnover", 1.0)
+        self._stop_loss = params.get("stop_loss", 0.05)
         super().init(**params)
 
     def on_data(self, data: pd.DataFrame, current_date: date) -> list[Signal]:

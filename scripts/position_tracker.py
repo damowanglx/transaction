@@ -136,7 +136,10 @@ def main(check_only: bool = False):
         print(f"  {code:<12} {name:<8} ¥{entry:<7.2f} ¥{price:<7.2f} {pnl_pct:+7.2f}% ¥{mv:<8,.0f} ¥{stop:<7.2f} {status}")
 
     print(f"  {'-'*75}")
-    print(f"  总成本: ¥{total_cost:,.0f} | 总市值: ¥{total_mv:,.0f} | 总盈亏: ¥{total_pnl:+,.0f} ({total_pnl/total_cost*100:+.1f}%)" if total_cost > 0 else "")
+    if total_cost > 0:
+        print(f"  总成本: ¥{total_cost:,.0f} | 总市值: ¥{total_mv:,.0f} | 总盈亏: ¥{total_pnl:+,.0f} ({total_pnl/total_cost*100:+.1f}%)")
+    else:
+        print(f"  总市值: ¥{total_mv:,.0f}")
     print(f"  仓位: {total_mv/TOTAL_CAPITAL*100:.1f}% | 可用: ¥{TOTAL_CAPITAL - total_mv:,.0f}")
     print(f"  交易成本已记录: {TRADE_LOG}")
 
