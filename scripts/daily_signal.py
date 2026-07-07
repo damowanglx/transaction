@@ -30,6 +30,7 @@ from risk.risk_engine import RiskEngine
 from strategy.selector.stock_selector import StockSelector
 from strategy.timing.trend_follow import TrendFollowStrategy
 from strategy.timing.mean_revert import MeanRevertStrategy
+from strategy.base.strategy_template import Signal, SignalType
 
 from config.settings import setup_logging
 setup_logging()
@@ -174,26 +175,80 @@ def main(strategy: str = "trend_follow", dry_run: bool = False):
     except Exception:
         pass
 
-    # 2. Run strategy
-    if strategy == "trend_follow":
-        strat = TrendFollowStrategy("daily_tf")
-        strat.init(ma_fast=5, ma_slow=20, ma_trend=60, top_n=10)
-    elif strategy == "mean_revert":
-        strat = MeanRevertStrategy("daily_mr")
-        strat.init(bb_period=23, bb_std=3.0, rsi_oversold=26, rsi_overbought=65,
-                   stop_loss=0.05, take_profit=0.10, top_n=10,
-                   min_price=5.0, min_turnover=1.0,
-                   use_atr_stop=True, use_vol_target=True,
-                   current_holdings=current_positions)
-    else:
-        selector = StockSelector("daily_selector")
-        selector.init(
-            factors=["mom_60", "vol_20", "avg_turn_20"],
-            top_n=10,
-        )
-        signals = selector.on_data(df, end_date)
-        print_signals(signals, dry_run, price_lookup)
-        return
+    # 2. Run strategy — default multi-strategy voting
+    if strategy not in ("trend_follow", "mean_revert", "multi"):
+        # Default to multi-strategy mode
+        strategy = "multi"
+
+    all_buys: dict[str, dict] = {}  # code → {score, signals, reasons}
+    all_sells: set[str] = set()
+
+    if strategy in ("mean_revert", "multi"):
+        mr = MeanRevertStrategy("daily_mr")
+        mr.init(bb_period=23, bb_std=3.0, rsi_oversold=26, rsi_overbought=65,
+                stop_loss=0.05, take_profit=0.10, top_n=10,
+                min_price=5.0, min_turnover=1.0,
+                use_atr_stop=True, use_vol_target=True,
+                current_holdings=current_positions)
+        mr_signals = mr.on_data(df, end_date)
+        for s in mr_signals:
+            if s.signal_type.value == "BUY":
+                entry = all_buys.setdefault(s.ts_code, {"score": 0, "reasons": [], "weight": 0})
+                entry["score"] += 1
+                entry["reasons"].append(f"MR: {s.reason[:30]}")
+                entry["weight"] = s.target_weight
+            else:
+                all_sells.add(s.ts_code)
+        logger.info("MeanRevert: %d buys, %d sells",
+                     sum(1 for s in mr_signals if s.signal_type.value == "BUY"),
+                     sum(1 for s in mr_signals if s.signal_type.value == "SELL"))
+
+    if strategy in ("trend_follow", "multi"):
+        tf = TrendFollowStrategy("daily_tf")
+        tf.init(ma_fast=5, ma_slow=20, ma_trend=60, top_n=10)
+        tf.sync_positions(current_positions)
+        tf_signals = tf.on_data(df, end_date)
+        for s in tf_signals:
+            if s.signal_type.value == "BUY":
+                entry = all_buys.setdefault(s.ts_code, {"score": 0, "reasons": [], "weight": 0})
+                entry["score"] += 1
+                entry["reasons"].append(f"TF: {s.reason[:30]}")
+                if entry["weight"] == 0:
+                    entry["weight"] = s.target_weight
+            else:
+                all_sells.add(s.ts_code)
+        logger.info("TrendFollow: %d buys, %d sells",
+                     sum(1 for s in tf_signals if s.signal_type.value == "BUY"),
+                     sum(1 for s in tf_signals if s.signal_type.value == "SELL"))
+
+    # Build consensus signals
+    signals = []
+    for code, info in all_buys.items():
+        if code in current_positions or code in all_sells:
+            continue
+        votes = info["score"]
+        conf = 0.5 + votes * 0.25  # 2 votes = 100%, 1 vote = 75%
+        weight = info["weight"] * (0.5 if votes == 1 else 1.0)  # Half-size for single-vote
+        signals.append(Signal(
+            ts_code=code, signal_type=SignalType.BUY,
+            confidence=conf,
+            reason=f"[{votes}/2策略] {' | '.join(info['reasons'])}",
+            target_weight=weight,
+            timestamp=end_date,
+        ))
+
+    for code in all_sells:
+        signals.append(Signal(
+            ts_code=code, signal_type=SignalType.SELL,
+            confidence=0.8 if code in all_sells else 0.5,
+            reason="Multi-strategy consensus: sell",
+            target_weight=0.0, timestamp=end_date,
+        ))
+
+    logger.info("Consensus: %d buys, %d sells (from %d buy candidates)",
+                 sum(1 for s in signals if s.signal_type.value == "BUY"),
+                 sum(1 for s in signals if s.signal_type.value == "SELL"),
+                 len(all_buys))
 
     signals = strat.on_data(df, end_date)
 
@@ -210,6 +265,10 @@ def main(strategy: str = "trend_follow", dry_run: bool = False):
     new_positions = {}
     for s in signals:
         if s.signal_type.value == "BUY":
+            new_positions[s.ts_code] = {
+                "entry_price": price_lookup.get(s.ts_code, 0.0),
+                "buy_date": str(end_date),
+            }
     # Keep existing positions that weren't sold
     sell_codes = {s.ts_code for s in signals if s.signal_type.value == "SELL"}
     for code, pos in current_positions.items():
