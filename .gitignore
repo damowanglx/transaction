@@ -28,3 +28,4 @@ config/halt.json
 
 # Docker
 docker-compose.override.yml
+export/
