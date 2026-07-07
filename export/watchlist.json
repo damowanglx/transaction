@@ -1,0 +1,87 @@
+{
+  "updated": "2026-07-07T15:39:00.355556",
+  "data_date": "2026-07-06",
+  "items": [
+    {
+      "code": "002733.SZ",
+      "name": "雄韬股份",
+      "current": 25.13,
+      "stop": 26.95,
+      "gap_pct": -6.75,
+      "alert": "SELL",
+      "take_profit": 32.63
+    },
+    {
+      "code": "002927.SZ",
+      "name": "泰永长征",
+      "current": 18.18,
+      "stop": 17.77,
+      "gap_pct": 2.31,
+      "alert": "WARN",
+      "take_profit": 21.51
+    },
+    {
+      "code": "000697.SZ",
+      "name": "炼石航空",
+      "current": 10.08,
+      "stop": 9.58,
+      "gap_pct": 5.22,
+      "alert": "OK",
+      "take_profit": 11.59
+    },
+    {
+      "code": "300410.SZ",
+      "name": "浩丰科技",
+      "current": 10.26,
+      "stop": 9.75,
+      "gap_pct": 5.23,
+      "alert": "OK",
+      "take_profit": 11.8
+    },
+    {
+      "code": "000831.SZ",
+      "name": "中国稀土",
+      "current": 53.3,
+      "stop": 50.64,
+      "gap_pct": 5.25,
+      "alert": "OK",
+      "take_profit": 61.3
+    },
+    {
+      "code": "002741.SZ",
+      "name": "光华科技",
+      "current": 32.21,
+      "stop": 30.6,
+      "gap_pct": 5.26,
+      "alert": "OK",
+      "take_profit": 37.04
+    },
+    {
+      "code": "002645.SZ",
+      "name": "华宏科技",
+      "current": 25.75,
+      "stop": 24.46,
+      "gap_pct": 5.27,
+      "alert": "OK",
+      "take_profit": 29.61
+    },
+    {
+      "code": "002534.SZ",
+      "name": "西子洁能",
+      "current": 17.31,
+      "stop": 16.25,
+      "gap_pct": 6.52,
+      "alert": "OK",
+      "take_profit": 19.68
+    },
+    {
+      "code": "002947.SZ",
+      "name": "恒铭达",
+      "current": 74.12,
+      "stop": 68.4,
+      "gap_pct": 8.36,
+      "alert": "OK",
+      "take_profit": 82.8
+    }
+  ]
+}
