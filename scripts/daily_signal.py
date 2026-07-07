@@ -59,6 +59,46 @@ def main(strategy: str = "trend_follow", dry_run: bool = False):
     if latest_db and latest_db < today - timedelta(days=1):
         logger.warning("DB data is stale (latest=%s, today=%s). Run download_incremental first.", latest_db, today)
 
+    # -- Market health check: skip buys if market in downtrend --
+    market_ok = True
+    market_status = ""
+    try:
+        csi = ch.client.query_df(
+            "SELECT trade_date, close FROM daily_bars "
+            "WHERE ts_code = '000300.SH' AND trade_date >= %(start)s "
+            "ORDER BY trade_date",
+            parameters={"start": (today - timedelta(days=120)).isoformat()},
+        )
+        if not csi.empty and len(csi) >= 20:
+            csi_close = csi["close"]
+            ma20 = csi_close.rolling(20).mean().iloc[-1]
+            ma50 = csi_close.rolling(50).mean().iloc[-1] if len(csi) >= 50 else ma20
+            current = csi_close.iloc[-1]
+            pct_from_ma20 = (current - ma20) / ma20 * 100
+            pct_from_ma50 = (current - ma50) / ma50 * 100
+            chg_5d = (current - csi_close.iloc[-5]) / csi_close.iloc[-5] * 100 if len(csi) >= 5 else 0
+
+            market_status = (
+                f"沪深300 {csi['trade_date'].iloc[-1]}: {current:.0f} | "
+                f"MA20: {ma20:.0f} ({pct_from_ma20:+.1f}%) | "
+                f"5日: {chg_5d:+.1f}%"
+            )
+
+            if pct_from_ma20 < -5:
+                market_ok = False
+                market_status += " | ⛔ 大盘深跌 -5%以下，暂停买入"
+            elif pct_from_ma20 < -3:
+                market_ok = False
+                market_status += " | ⚠️ 大盘跌破MA20 -3%，暂停买入"
+            elif chg_5d < -5:
+                market_ok = False
+                market_status += " | ⚠️ 近5日跌超5%，暂停买入"
+
+    except Exception as e:
+        logger.warning("Market health check failed: %s", e)
+
+    logger.info("Market: %s", market_status or "data unavailable")
+
     # Filter to dates with actual data
     import random
     random.seed(42)
@@ -156,16 +196,20 @@ def main(strategy: str = "trend_follow", dry_run: bool = False):
         return
 
     signals = strat.on_data(df, end_date)
-    print_signals(signals, dry_run, price_lookup, name_lookup, stop_lookup, total_capital=200_000, top_n=10)
+
+    # Market gate: filter out buys when market is in downtrend
+    if not market_ok:
+        buys_before = [s for s in signals if s.signal_type.value == "BUY"]
+        signals = [s for s in signals if s.signal_type.value != "BUY"]
+        logger.warning("MARKET DOWNTREND — blocked %d buy signals. Only sells allowed.", len(buys_before))
+
+    print_signals(signals, dry_run, price_lookup, name_lookup, stop_lookup,
+                  total_capital=200_000, top_n=10, market_info=market_status)
 
     # Save positions for tomorrow
     new_positions = {}
     for s in signals:
         if s.signal_type.value == "BUY":
-            new_positions[s.ts_code] = {
-                "entry_price": price_lookup.get(s.ts_code, 0.0),
-                "buy_date": str(end_date),
-            }
     # Keep existing positions that weren't sold
     sell_codes = {s.ts_code for s in signals if s.signal_type.value == "SELL"}
     for code, pos in current_positions.items():
@@ -179,8 +223,11 @@ def main(strategy: str = "trend_follow", dry_run: bool = False):
 def print_signals(signals, dry_run: bool, price_lookup: dict[str, float] | None = None,
                   name_lookup: dict[str, str] | None = None,
                   stop_lookup: dict[str, float] | None = None,
-                  total_capital: float = 200_000, top_n: int = 10):
+                  total_capital: float = 200_000, top_n: int = 10,
+                  market_info: str = ""):
     """Print signals with actionable details: price, shares, amount."""
+    if market_info:
+        print(f"\n  📊 {market_info}")
     if not signals:
         logger.info("No signals generated today")
         return

@@ -108,7 +108,9 @@ def main():
     r = ch.client.query("SELECT DISTINCT ts_code FROM daily_bars WHERE trade_date >= '2026-06-20'")
     codes = [row[0].replace(".SH","").replace(".SZ","").replace(".BJ","") for row in r.result_rows]
     codes = list(set(codes))  # Dedup
-    logger.info("Downloading %d stocks", len(codes))
+    # Add CSI 300 benchmark to download
+    all_to_download = codes + ["000300"]
+    logger.info("Downloading %d stocks + CSI 300 benchmark", len(codes))
 
     # Download the last week (June 29 - July 4)
     today = date.today()
@@ -116,7 +118,7 @@ def main():
     end = today.strftime("%Y-%m-%d")
     logger.info("Range: %s to %s", start, end)
 
-    total = download_range(codes, start, end)
+    total = download_range(all_to_download, start, end)
     logger.info("Backfill complete: %d bars", total)
 
     bs.logout()
