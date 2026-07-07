@@ -30,6 +30,7 @@ from risk.risk_engine import RiskEngine
 from strategy.selector.stock_selector import StockSelector
 from strategy.timing.trend_follow import TrendFollowStrategy
 from strategy.timing.mean_revert import MeanRevertStrategy
+import pandas as pd
 from strategy.base.strategy_template import Signal, SignalType
 
 from config.settings import setup_logging
@@ -100,21 +101,17 @@ def main(strategy: str = "trend_follow", dry_run: bool = False):
 
     logger.info("Market: %s", market_status or "data unavailable")
 
-    # Filter to dates with actual data
+    # Set end_date for signal generation
+    end_date = latest_db
+
     import random
     import time as _time
     random.seed(int(_time.time() * 1000) % (2**31))
-    r = ch.client.query("SELECT max(trade_date) FROM daily_bars WHERE ts_code != '000300.SH'")
-    last_trade_date = r.first_row[0]
-    if isinstance(last_trade_date, str):
-        from datetime import datetime
-        last_trade_date = datetime.strptime(last_trade_date, "%Y-%m-%d").date()
-    codes = ch.get_all_codes_on_date(last_trade_date)
+    codes = ch.get_all_codes_on_date(end_date)
     codes = [c for c in codes if c != '000300.SH']
     sample = random.sample(codes, min(len(codes), 2000))
     codes_tuple = tuple(sample)
-    end_date = last_trade_date
-    start_date = end_date - timedelta(days=365)
+    start_date = end_date - timedelta(days=120)  # 120d enough for all indicators
 
     df = ch.client.query_df(
         "SELECT ts_code, trade_date, open, high, low, close, vol, amount, turnover_rate "
@@ -122,9 +119,9 @@ def main(strategy: str = "trend_follow", dry_run: bool = False):
         "WHERE ts_code IN %(codes)s "
         "  AND trade_date >= %(start)s "
         "  AND trade_date <= %(end)s "
-        "ORDER BY ts_code, trade_date",
-        parameters={"codes": codes_tuple, "start": start_date.isoformat(), "end": end_date.isoformat()},
-    )
+            "ORDER BY ts_code, trade_date",
+            parameters={"codes": codes_tuple, "start": start_date.isoformat(), "end": end_date.isoformat()},
+        )
 
     if df.empty:
         logger.error("No OHLCV data loaded from ClickHouse. Data pipeline may be down.")
@@ -137,7 +134,6 @@ def main(strategy: str = "trend_follow", dry_run: bool = False):
 
     # Build ATR stop lookup
     import numpy as np
-    import pandas as pd
     stop_lookup = {}
     for code in last_day["ts_code"].unique():
         s = df[df["ts_code"] == code].sort_values("trade_date")

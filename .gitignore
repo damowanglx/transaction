@@ -25,6 +25,7 @@ params_history/
 *.log
 config/user_config.json
 config/halt.json
+cache/
 
 # Docker
 docker-compose.override.yml
