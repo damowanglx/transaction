@@ -262,11 +262,18 @@ def main(strategy: str = "trend_follow", dry_run: bool = False):
         if s.signal_type.value == "BUY":
             entry_price = price_lookup.get(s.ts_code, 0.0)
             stop_loss = stop_lookup.get(s.ts_code, entry_price * 0.95)
+            # Calculate volume for new positions
+            per_stock_budget = 200_000 * 0.80 / top_n
+            shares = int(per_stock_budget / entry_price / 100) * 100 if entry_price > 0 else 0
             new_positions[s.ts_code] = {
                 "entry_price": entry_price,
+                "volume": shares,
+                "amount": shares * entry_price,
                 "buy_date": str(end_date),
                 "stop_loss": stop_loss,
                 "take_profit": entry_price * 1.15,
+                "commission": 5.00,
+                "cost_basis": entry_price + 5.00 / shares if shares > 0 else entry_price,
             }
     # Keep existing positions that weren't sold
     sell_codes = {s.ts_code for s in signals if s.signal_type.value == "SELL"}
