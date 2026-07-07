@@ -144,6 +144,7 @@ def afternoon_routine():
     print(f"{'='*60}")
 
     positions = load_positions()
+    _, prices = get_latest_prices()  # Single query, not per-stock
 
     print(f"\n  最后机会 — 止损线参考:")
     critical = []
@@ -152,8 +153,6 @@ def afternoon_routine():
         stop = pos.get("stop_loss", entry * 0.95)
         name = pos.get("name", "")
         print(f"    {code} {name}: 止损 ¥{stop:.2f}")
-        # Flag stocks that were near stop yesterday
-        _, prices = get_latest_prices()
         price = prices.get(code, entry)
         if price <= stop:
             critical.append(f"  🚨 {code} {name} 昨日收盘已破止损 → 今天必须卖!")

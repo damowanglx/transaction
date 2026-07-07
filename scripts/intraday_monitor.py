@@ -97,7 +97,7 @@ def check_alerts(positions: dict, prices: dict, breaker: CircuitBreaker) -> list
         tick_low = tick.get("low", 0)
         if tick_high > 0 and tick_low > 0:
             limit_pct = 0.20 if code.startswith(("688", "300")) else 0.10
-            prev_close = entry  # Approximate
+            prev_close = tick.get("preClose", entry)
             if (tick_high - prev_close) / prev_close >= limit_pct * 0.99:
                 alerts.append(f"🚨 {code} 涨停! ¥{last:.2f} (limit +{limit_pct*100:.0f}%)")
             if (prev_close - tick_low) / prev_close >= limit_pct * 0.99:
@@ -181,10 +181,10 @@ def main():
                 print(f"\n{now.strftime('%H:%M')} — 已收盘，监控退出")
                 break
             # Lunch break
-            if now.hour == 11 and now.minute >= 30:
-                if now.hour < 13:
-                    time.sleep(POLL_SECONDS)
-                    continue
+            # Lunch break 11:30-13:00 — sleep through
+            if (now.hour == 11 and now.minute >= 30) or now.hour == 12:
+                time.sleep(POLL_SECONDS)
+                continue
 
             prices = get_realtime_prices(codes)
             if not prices:

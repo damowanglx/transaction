@@ -173,11 +173,12 @@ class PositionManager:
             )
 
         pos = current_positions[ts_code]
+        total_mv = sum(p.get("market_value", 0) for p in current_positions.values())
         return PositionCheck(
             allowed=True,
             max_shares=pos.get("volume", 0),
             reason="OK",
-            current_weight=pos.get("market_value", 0) / (sum(p.get("market_value", 0) for p in current_positions.values()) or 1),
+            current_weight=pos.get("market_value", 0) / total_mv if total_mv > 0 else 0,
             target_weight=0,
         )
 

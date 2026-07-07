@@ -85,7 +85,9 @@ class MeanRevertStrategy(BaseStrategy):
             return []
 
         # Market regime filter: skip mean reversion in strong downtrends
-        if self._market_regime and self._market_data is not None and len(self._market_data) >= 50:
+        market_ok = (self._market_regime and self._market_data is not None
+                     and hasattr(self._market_data, '__len__') and len(self._market_data) >= 50)
+        if market_ok:
             # Slice to only use data up to current_date (no look-ahead)
             market_up_to_today = self._market_data[self._market_data.index <= pd.Timestamp(current_date)]
             if len(market_up_to_today) >= 50:

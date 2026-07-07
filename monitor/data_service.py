@@ -94,9 +94,27 @@ def get_positions() -> pd.DataFrame:
     positions["net_volume"] = positions["buy_volume"] - positions["sell_volume"]
     positions["avg_cost"] = positions["buy_amount"] / positions["buy_volume"].replace(0, 1)
     positions = positions[positions["net_volume"] > 0].copy()
-    positions["current_price"] = positions["avg_cost"]  # Default
+    # Try to get latest close prices from ClickHouse
+    try:
+        from data.storage.clickhouse_client import get_clickhouse_client
+        ch = get_clickhouse_client()
+        if ch and ch.ping():
+            r = ch.client.query("SELECT max(trade_date) FROM daily_bars")
+            latest = r.first_row[0]
+            codes = list(positions.index)
+            if codes and latest:
+                prices_df = ch.client.query_df(
+                    "SELECT ts_code, close FROM daily_bars "
+                    "WHERE ts_code IN %(codes)s AND trade_date = %(d)s",
+                    parameters={"codes": tuple(codes), "d": str(latest)},
+                )
+                price_map = dict(zip(prices_df["ts_code"], prices_df["close"]))
+                positions["current_price"] = [price_map.get(c, avg) for c, avg in zip(positions.index, positions["avg_cost"])]
+    except Exception:
+        positions["current_price"] = positions["avg_cost"]
+
     positions["market_value"] = positions["net_volume"] * positions["current_price"]
-    positions["pnl_pct"] = 0.0
+    positions["pnl_pct"] = (positions["current_price"] - positions["avg_cost"]) / positions["avg_cost"].replace(0, 1)
 
     return positions.reset_index()[["ts_code", "net_volume", "avg_cost", "current_price", "market_value", "pnl_pct"]]
 

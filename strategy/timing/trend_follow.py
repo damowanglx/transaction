@@ -138,6 +138,7 @@ class TrendFollowStrategy(BaseStrategy):
                 ))
 
         # Generate sell signals for held stocks that fell out of top or weakened
+        sold_today = set()  # Prevent duplicate sells per day
         for code in self.holdings:
             if code not in top_codes:
                 signals.append(Signal(
@@ -151,11 +152,12 @@ class TrendFollowStrategy(BaseStrategy):
 
             # Also sell if price breaks below MA_trend
             subset = data[data["ts_code"] == code]
-            if not subset.empty:
+            if not subset.empty and code not in sold_today:
                 close = subset.sort_values("trade_date")["close"]
                 current_price = close.iloc[-1]
                 ma_trend_val = close.rolling(self._ma_trend).mean().iloc[-1]
-                if current_price < ma_trend_val and code not in {s.ts_code for s in signals}:
+                if current_price < ma_trend_val:
+                    sold_today.add(code)
                     signals.append(Signal(
                         ts_code=code, signal_type=SignalType.SELL,
                         confidence=0.8,

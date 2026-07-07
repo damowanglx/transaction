@@ -57,8 +57,8 @@ def main(strategy: str = "trend_follow", dry_run: bool = False):
     if today.weekday() >= 5:
         logger.info("Today is weekend, skipping signal generation. Latest DB: %s", latest_db)
         return
-    if latest_db and latest_db < today - timedelta(days=1):
-        logger.warning("DB data is stale (latest=%s, today=%s). Run download_incremental first.", latest_db, today)
+    if latest_db and latest_db < today - timedelta(days=3):
+        logger.warning("DB data is stale (latest=%s, today=%s). Run backfill_baostock first.", latest_db, today)
 
     # -- Market health check: skip buys if market in downtrend --
     market_ok = True
@@ -264,9 +264,13 @@ def main(strategy: str = "trend_follow", dry_run: bool = False):
     new_positions = {}
     for s in signals:
         if s.signal_type.value == "BUY":
+            entry_price = price_lookup.get(s.ts_code, 0.0)
+            stop_loss = stop_lookup.get(s.ts_code, entry_price * 0.95)
             new_positions[s.ts_code] = {
-                "entry_price": price_lookup.get(s.ts_code, 0.0),
+                "entry_price": entry_price,
                 "buy_date": str(end_date),
+                "stop_loss": stop_loss,
+                "take_profit": entry_price * 1.15,
             }
     # Keep existing positions that weren't sold
     sell_codes = {s.ts_code for s in signals if s.signal_type.value == "SELL"}

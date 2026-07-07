@@ -129,14 +129,14 @@ def show_config():
     col1, col2 = st.columns(2)
 
     with col1:
-        st.number_input("单票最大仓位 (%)", value=20.0, min_value=5.0, max_value=50.0)
-        st.number_input("总仓位上限 (%)", value=80.0, min_value=20.0, max_value=100.0)
-        st.number_input("最大持仓数", value=8, min_value=1, max_value=20)
+        st.number_input("单票最大仓位 (%)", value=20.0, min_value=5.0, max_value=50.0, key="cfg_sp")
+        st.number_input("总仓位上限 (%)", value=80.0, min_value=20.0, max_value=100.0, key="cfg_tp")
+        st.number_input("最大持仓数", value=10, min_value=1, max_value=20, key="cfg_mh")
 
     with col2:
-        st.number_input("止损线 (%)", value=5.0, min_value=1.0, max_value=20.0)
-        st.number_input("日亏损熔断 (%)", value=2.0, min_value=0.5, max_value=10.0)
-        st.number_input("连续亏损暂停 (天)", value=3, min_value=1, max_value=10)
+        st.number_input("止损线 (%)", value=5.0, min_value=1.0, max_value=20.0, key="cfg_sl")
+        st.number_input("日亏损熔断 (%)", value=3.5, min_value=0.5, max_value=10.0, key="cfg_md")
+        st.number_input("连续亏损暂停 (天)", value=3, min_value=1, max_value=10, key="cfg_cl")
 
     st.divider()
 
@@ -154,12 +154,12 @@ def show_config():
         from config.settings import atomic_write_json
         config_data = {
             "risk": {
-                "max_single_position_pct": st.session_state.get("sp", 20.0) / 100,
-                "max_total_position_pct": st.session_state.get("tp", 80.0) / 100,
-                "max_holdings_count": st.session_state.get("mh", 8),
-                "stop_loss_pct": st.session_state.get("sl", 5.0) / 100,
-                "max_daily_loss_pct": st.session_state.get("md", 2.0) / 100,
-                "max_consecutive_loss_days": st.session_state.get("cl", 3),
+                "max_single_position_pct": st.session_state.get("cfg_sp", 20.0) / 100,
+                "max_total_position_pct": st.session_state.get("cfg_tp", 80.0) / 100,
+                "max_holdings_count": int(st.session_state.get("cfg_mh", 10)),
+                "stop_loss_pct": st.session_state.get("cfg_sl", 5.0) / 100,
+                "max_daily_loss_pct": st.session_state.get("cfg_md", 3.5) / 100,
+                "max_consecutive_loss_days": int(st.session_state.get("cfg_cl", 3)),
             }
         }
         atomic_write_json("config/user_config.json", config_data, indent=2, ensure_ascii=False)

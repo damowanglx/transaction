@@ -242,7 +242,7 @@ class StockSelector(BaseStrategy):
                 signals.append(Signal(
                     ts_code=code,
                     signal_type=SignalType.BUY,
-                    confidence=min(score / 3.0 + 0.5, 1.0) if score > 0 else 0.5,
+                    confidence=max(0.1, min(score / 3.0 + 0.5, 1.0)) if score > 0 else 0.0,
                     reason=f"Selected #{rank}, score={score:.3f}",
                     target_weight=1.0 / self._top_n,
                     timestamp=current_date,
