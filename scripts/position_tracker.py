@@ -81,11 +81,12 @@ def log_trade(action: str, code: str, price: float, volume: int, reason: str = "
     return commission, stamp_tax
 
 
-def main():
+def main(check_only: bool = False):
+    """Run position check. If check_only=True, exits non-zero on alerts found."""
     positions = load_positions()
     if not positions:
         print("无持仓")
-        return
+        return 0
 
     trade_date, prices = load_latest_prices()
 
