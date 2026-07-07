@@ -115,54 +115,57 @@ def morning_routine():
 
 
 def midday_routine():
-    """11:30 AM — Midday position check."""
+    """11:30 AM — Manual check reminder. No real-time data available."""
     print(f"\n{'='*60}")
-    print(f"  ☀️ 午间检查 — {datetime.now().strftime('%H:%M')}")
+    print(f"  ☀️ 午间提醒 — {datetime.now().strftime('%H:%M')}")
+    print(f"  ⚠️ 以下为昨日收盘价，请打开券商APP核对实时价格")
     print(f"{'='*60}")
 
     positions = load_positions()
     if not positions:
         return
 
-    trade_date, prices = get_latest_prices()
-
-    # Quick P&L scan
-    total_pnl = 0
+    print(f"\n  打开 QMT 或券商APP，逐只检查:")
     for code, pos in positions.items():
         entry = pos["entry_price"]
-        vol = pos["volume"]
-        price = prices.get(code, entry)
-        pnl = (price - entry) * vol
-        total_pnl += pnl
+        stop = pos.get("stop_loss", entry * 0.95)
+        name = pos.get("name", "")
+        print(f"    {code} {name}: 止损 ¥{stop:.2f} | 入场 ¥{entry:.2f} → 现价低于止损就卖")
 
-        if price <= pos.get("stop_loss", entry * 0.95):
-            print(f"  🔴 {code} {pos.get('name','')}: ¥{price:.2f} 已破止损! 下午开盘立即卖出")
-
-    total_mv = sum(prices.get(c, pos["entry_price"]) * pos["volume"] for c, pos in positions.items())
-    print(f"  持仓{len(positions)}只 | 市值¥{total_mv:,.0f} | 日盈亏约¥{total_pnl:+,.0f}")
-    print(f"  ⚠️ 数据是收盘价，实际价格请打开QMT查看")
+    print(f"\n  📱 不知道现价？打开券商APP → 持仓 → 看最新价")
     print(f"{'='*60}\n")
 
 
 def afternoon_routine():
-    """14:30 PM — Final check before close."""
+    """14:30 PM — Final reminder before market close."""
     print(f"\n{'='*60}")
-    print(f"  🌤️ 尾盘检查 — {datetime.now().strftime('%H:%M')}")
-    print(f"  ⚠️ 距收盘30分钟 — 该止损的不要犹豫")
+    print(f"  🌤️ 尾盘提醒 — {datetime.now().strftime('%H:%M')}")
+    print(f"  距收盘30分钟 — 打开券商APP核对现价")
     print(f"{'='*60}")
 
     positions = load_positions()
-    trade_date, prices = get_latest_prices()
 
+    print(f"\n  最后机会 — 止损线参考:")
+    critical = []
     for code, pos in positions.items():
         entry = pos["entry_price"]
         stop = pos.get("stop_loss", entry * 0.95)
+        name = pos.get("name", "")
+        print(f"    {code} {name}: 止损 ¥{stop:.2f}")
+        # Flag stocks that were near stop yesterday
+        _, prices = get_latest_prices()
         price = prices.get(code, entry)
         if price <= stop:
-            print(f"  🔴 {code} {pos.get('name','')}: 现价约¥{price:.2f} 止损¥{stop:.2f} → 立即卖出!")
-        elif (price - stop) / stop < 0.02:
-            print(f"  🟡 {code}: 几乎到止损 — 下午再跌就卖")
+            critical.append(f"  🚨 {code} {name} 昨日收盘已破止损 → 今天必须卖!")
 
+    if critical:
+        print(f"\n  ⚠️ 紧急:")
+        for c in critical:
+            print(c)
+    else:
+        print(f"\n  ✅ 基于昨日收盘价，暂无突破止损")
+
+    print(f"\n  收盘后运行: py -3.12 scripts/daily_workflow.py close")
     print(f"{'='*60}\n")
 
 
