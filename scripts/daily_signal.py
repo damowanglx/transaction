@@ -107,11 +107,12 @@ def main(strategy: str = "trend_follow", dry_run: bool = False):
     import random
     import time as _time
     random.seed(int(_time.time() * 1000) % (2**31))
+
     codes = ch.get_all_codes_on_date(end_date)
     codes = [c for c in codes if c != '000300.SH']
-    sample = random.sample(codes, min(len(codes), 2000))
+    sample = random.sample(codes, min(len(codes), 1000))
     codes_tuple = tuple(sample)
-    start_date = end_date - timedelta(days=120)  # 120d enough for all indicators
+    start_date = end_date - timedelta(days=60)
 
     df = ch.client.query_df(
         "SELECT ts_code, trade_date, open, high, low, close, vol, amount, turnover_rate "
@@ -119,9 +120,11 @@ def main(strategy: str = "trend_follow", dry_run: bool = False):
         "WHERE ts_code IN %(codes)s "
         "  AND trade_date >= %(start)s "
         "  AND trade_date <= %(end)s "
-            "ORDER BY ts_code, trade_date",
-            parameters={"codes": codes_tuple, "start": start_date.isoformat(), "end": end_date.isoformat()},
-        )
+        "ORDER BY ts_code, trade_date",
+        parameters={"codes": codes_tuple, "start": start_date.isoformat(), "end": end_date.isoformat()},
+    )
+
+    logger.info("Loaded %d rows, %d stocks", len(df), df["ts_code"].nunique())
 
     if df.empty:
         logger.error("No OHLCV data loaded from ClickHouse. Data pipeline may be down.")

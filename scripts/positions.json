@@ -1,38 +1,101 @@
 {
   "300410.SZ": {
-    "name": "浩丰科技", "entry_price": 10.26, "volume": 1500, "amount": 15390,
-    "commission": 5.00, "buy_date": "2026-07-02", "stop_loss": 9.75, "take_profit": 11.80, "cost_basis": 10.26
+    "name": "浩丰科技",
+    "entry_price": 10.26,
+    "volume": 1500,
+    "amount": 15390,
+    "commission": 5.0,
+    "buy_date": "2026-07-02",
+    "stop_loss": 9.75,
+    "take_profit": 11.8,
+    "cost_basis": 10.26
   },
   "000697.SZ": {
-    "name": "炼石航空", "entry_price": 10.08, "volume": 1500, "amount": 15120,
-    "commission": 5.00, "buy_date": "2026-07-03", "stop_loss": 9.58, "take_profit": 11.59, "cost_basis": 10.08
+    "name": "炼石航空",
+    "entry_price": 10.08,
+    "volume": 1500,
+    "amount": 15120,
+    "commission": 5.0,
+    "buy_date": "2026-07-03",
+    "stop_loss": 9.58,
+    "take_profit": 11.59,
+    "cost_basis": 10.08
   },
   "000831.SZ": {
-    "name": "中国稀土", "entry_price": 53.30, "volume": 200, "amount": 10660,
-    "commission": 5.00, "buy_date": "2026-07-03", "stop_loss": 50.64, "take_profit": 61.30, "cost_basis": 53.33
+    "name": "中国稀土",
+    "entry_price": 53.3,
+    "volume": 200,
+    "amount": 10660,
+    "commission": 5.0,
+    "buy_date": "2026-07-03",
+    "stop_loss": 50.64,
+    "take_profit": 61.3,
+    "cost_basis": 53.33
   },
   "002534.SZ": {
-    "name": "西子洁能", "entry_price": 17.11, "volume": 800, "amount": 13688,
-    "commission": 5.00, "buy_date": "2026-07-06", "stop_loss": 16.25, "take_profit": 19.68, "cost_basis": 17.12
+    "name": "西子洁能",
+    "entry_price": 17.11,
+    "volume": 800,
+    "amount": 13688,
+    "commission": 5.0,
+    "buy_date": "2026-07-06",
+    "stop_loss": 16.25,
+    "take_profit": 19.68,
+    "cost_basis": 17.12
   },
   "002645.SZ": {
-    "name": "华宏科技", "entry_price": 25.75, "volume": 600, "amount": 15450,
-    "commission": 5.00, "buy_date": "2026-07-02", "stop_loss": 24.46, "take_profit": 29.61, "cost_basis": 25.76
+    "name": "华宏科技",
+    "entry_price": 25.75,
+    "volume": 600,
+    "amount": 15450,
+    "commission": 5.0,
+    "buy_date": "2026-07-02",
+    "stop_loss": 24.46,
+    "take_profit": 29.61,
+    "cost_basis": 25.76
   },
   "002733.SZ": {
-    "name": "雄韬股份", "entry_price": 28.37, "volume": 500, "amount": 14185,
-    "commission": 5.00, "buy_date": "2026-07-02", "stop_loss": 26.95, "take_profit": 32.63, "cost_basis": 28.38
+    "name": "雄韬股份",
+    "entry_price": 28.37,
+    "volume": 500,
+    "amount": 14185,
+    "commission": 5.0,
+    "buy_date": "2026-07-02",
+    "stop_loss": 26.95,
+    "take_profit": 32.63,
+    "cost_basis": 28.38
   },
   "002741.SZ": {
-    "name": "光华科技", "entry_price": 32.21, "volume": 400, "amount": 12884,
-    "commission": 5.00, "buy_date": "2026-07-06", "stop_loss": 30.60, "take_profit": 37.04, "cost_basis": 32.22
+    "name": "光华科技",
+    "entry_price": 32.21,
+    "volume": 400,
+    "amount": 12884,
+    "commission": 5.0,
+    "buy_date": "2026-07-06",
+    "stop_loss": 30.6,
+    "take_profit": 37.04,
+    "cost_basis": 32.22
   },
   "002927.SZ": {
-    "name": "泰永长征", "entry_price": 18.70, "volume": 800, "amount": 14960,
-    "commission": 5.00, "buy_date": "2026-07-02", "stop_loss": 17.77, "take_profit": 21.51, "cost_basis": 18.71
+    "name": "泰永长征",
+    "entry_price": 18.7,
+    "volume": 800,
+    "amount": 14960,
+    "commission": 5.0,
+    "buy_date": "2026-07-02",
+    "stop_loss": 17.77,
+    "take_profit": 21.51,
+    "cost_basis": 18.71
   },
   "002947.SZ": {
-    "name": "恒铭达", "entry_price": 72.00, "volume": 200, "amount": 14400,
-    "commission": 5.00, "buy_date": "2026-07-02", "stop_loss": 68.40, "take_profit": 82.80, "cost_basis": 72.03
+    "name": "恒铭达",
+    "entry_price": 72.0,
+    "volume": 200,
+    "amount": 14400,
+    "commission": 5.0,
+    "buy_date": "2026-07-02",
+    "stop_loss": 68.4,
+    "take_profit": 82.8,
+    "cost_basis": 72.03
   }
 }

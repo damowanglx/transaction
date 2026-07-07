@@ -56,27 +56,30 @@ def load_full_universe():
 
 
 def compute_indicators_vectorized(df: pd.DataFrame):
-    """Compute all strategy indicators in a vectorized batch (not per-stock loop).
+    """Compute all strategy indicators — explicit loop with vectorized per-stock ops."""
+    codes = df["ts_code"].unique()
+    logger.info("Computing indicators for %d stocks...", len(codes))
 
-    Uses groupby-apply which is faster than manual per-stock iteration.
-    """
-    logger.info("Computing indicators for %d stocks...", df["ts_code"].nunique())
+    t0 = time.time()
+    results = []
 
-    def compute_one_stock(group):
-        group = group.sort_values("trade_date")
+    for code in codes:
+        group = df[df["ts_code"] == code].sort_values("trade_date")
+        if len(group) < BB_PERIOD + 10:
+            results.append(group)
+            continue
+
         close = group["close"]
         vol = group["vol"]
-
-        if len(close) < BB_PERIOD + 10:
-            return group  # Skip stocks with too little data
 
         # Bollinger Bands (3σ)
         ma = close.rolling(BB_PERIOD).mean()
         std = close.rolling(BB_PERIOD).std()
-        group["bb_lower"] = ma - BB_STD * std
-        group["bb_upper"] = ma + BB_STD * std
-        band_range = group["bb_upper"] - group["bb_lower"]
-        group["bb_position_3"] = (close - group["bb_lower"]) / band_range.replace(0, np.nan)
+        upper = ma + BB_STD * std
+        lower = ma - BB_STD * std
+        band_range = upper - lower
+        group = group.copy()
+        group["bb_position_3"] = (close - lower) / band_range.replace(0, np.nan)
 
         # RSI 14
         delta = close.diff()
@@ -99,22 +102,21 @@ def compute_indicators_vectorized(df: pd.DataFrame):
         tr = pd.concat([h - l, (h - c.shift(1)).abs(), (l - c.shift(1)).abs()], axis=1).max(axis=1)
         group["atr_14"] = tr.rolling(14).mean()
 
-        # Trend indicators (for trend_follow)
+        # Trend indicators
         group["ma_5"] = close.rolling(5).mean()
         group["ma_60"] = close.rolling(60).mean()
         group["price_vs_ma60"] = (close - group["ma_60"]) / group["ma_60"].replace(0, np.nan)
 
-        # Volatility (for vol targeting)
+        # Volatility
         ret = close.pct_change()
         group["vol_20"] = ret.rolling(20).std() * np.sqrt(244)
 
-        return group
+        results.append(group)
 
-    t0 = time.time()
-    result = df.groupby("ts_code", group_keys=False).apply(compute_one_stock)
+    result = pd.concat(results, ignore_index=True)
     elapsed = time.time() - t0
     logger.info("Indicators computed in %.1f seconds (%.0f stocks/sec)",
-                 elapsed, df["ts_code"].nunique() / elapsed)
+                 elapsed, len(codes) / elapsed)
     return result
 
 
@@ -122,15 +124,13 @@ def save_cache(df: pd.DataFrame, data_date: date):
     """Save computed indicators to parquet cache."""
     CACHE_DIR.mkdir(exist_ok=True)
 
-    # Keep only indicator columns (drop raw OHLCV to save space)
-    indicator_cols = [
+    keep_cols = [c for c in [
         "ts_code", "trade_date", "close", "vol", "amount",
         "bb_position_3", "rsi_14", "ma_20", "dev_from_ma20",
         "vol_ratio", "atr_14", "ma_5", "ma_60", "price_vs_ma60", "vol_20",
         "turnover_rate",
-    ]
-    available = [c for c in indicator_cols if c in df.columns]
-    cache_df = df[available].copy()
+    ] if c in df.columns]
+    cache_df = df[keep_cols].copy()
     cache_df["cached_at"] = str(data_date)
 
     cache_df.to_csv(CACHE_FILE, index=False)
