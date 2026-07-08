@@ -21,7 +21,7 @@ logger = logging.getLogger("backfill")
 
 from data.storage.clickhouse_client import get_clickhouse_client
 
-THREADS = 8  # Network I/O bound, 8 threads optimal
+THREADS = 1  # Single-thread: avoids ClickHouse concurrent write issues
 BATCH_SIZE = 100
 
 

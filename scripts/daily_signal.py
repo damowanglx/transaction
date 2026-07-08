@@ -259,33 +259,28 @@ def main(strategy: str = "trend_follow", dry_run: bool = False):
     print_signals(signals, dry_run, price_lookup, name_lookup, stop_lookup,
                   total_capital=200_000, top_n=10, market_info=market_status)
 
-    # Save positions for tomorrow
-    new_positions = {}
+    # Save SIGNALS to separate file — do NOT overwrite positions.json
+    signal_output = {"date": str(end_date), "buys": [], "sells": []}
     for s in signals:
         if s.signal_type.value == "BUY":
             entry_price = price_lookup.get(s.ts_code, 0.0)
             stop_loss = stop_lookup.get(s.ts_code, entry_price * 0.95)
-            # Calculate volume for new positions
-            per_stock_budget = 200_000 * 0.80 / top_n
+            per_stock_budget = 200_000 * 0.80 / 10
             shares = int(per_stock_budget / entry_price / 100) * 100 if entry_price > 0 else 0
-            new_positions[s.ts_code] = {
-                "entry_price": entry_price,
-                "volume": shares,
-                "amount": shares * entry_price,
-                "buy_date": str(end_date),
-                "stop_loss": stop_loss,
-                "take_profit": entry_price * 1.15,
-                "commission": 5.00,
-                "cost_basis": entry_price + 5.00 / shares if shares > 0 else entry_price,
-            }
-    # Keep existing positions that weren't sold
-    sell_codes = {s.ts_code for s in signals if s.signal_type.value == "SELL"}
-    for code, pos in current_positions.items():
-        if code not in sell_codes and code not in new_positions:
-            new_positions[code] = pos
+            signal_output["buys"].append({
+                "ts_code": s.ts_code, "entry_price": entry_price,
+                "shares": shares, "amount": shares * entry_price,
+                "stop_loss": stop_loss, "confidence": s.confidence, "reason": s.reason,
+            })
+        else:
+            signal_output["sells"].append({
+                "ts_code": s.ts_code, "reason": s.reason, "confidence": s.confidence,
+            })
+    signal_file = Path(__file__).resolve().parent / "signals_today.json"
     from config.settings import atomic_write_json
-    atomic_write_json(str(pos_file), new_positions, indent=2, ensure_ascii=False)
-    logger.info("Saved %d positions for tomorrow", len(new_positions))
+    atomic_write_json(str(signal_file), signal_output, indent=2, ensure_ascii=False)
+    logger.info("Signals saved to signals_today.json (%d buys, %d sells)",
+                 len(signal_output["buys"]), len(signal_output["sells"]))
 
 
 def print_signals(signals, dry_run: bool, price_lookup: dict[str, float] | None = None,
