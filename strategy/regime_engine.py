@@ -56,11 +56,13 @@ def detect_regime(
     high_60d = close.tail(60).max() if len(close) >= 60 else close.max()
     drawdown = (current - high_60d) / high_60d * 100
 
-    # Regime logic
+    # Regime logic (ordered by severity)
     if drawdown < -15:
         return MarketRegime.BEAR_TREND  # Deep correction
-    if drawdown < -8 and trend_slope < -0.5:
+    if drawdown < -5 and trend_slope < -0.3:
         return MarketRegime.BEAR_TREND  # Accelerating down
+    if drawdown < -3 and trend_slope < -0.5:
+        return MarketRegime.BEAR_TREND  # Steady decline
 
     if vol_ratio > 1.5:
         return MarketRegime.VOLATILE  # Volatility spike
