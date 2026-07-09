@@ -54,6 +54,28 @@ def main(strategy: str = "trend_follow", dry_run: bool = False):
     if isinstance(latest_db, str):
         from datetime import datetime
         latest_db = datetime.strptime(latest_db, "%Y-%m-%d").date()
+
+    # -- Market regime detection --
+    from strategy.regime_engine import detect_regime, get_position_config, MarketRegime
+    regime = MarketRegime.RANGE_BOUND  # default
+    regime_config = get_position_config(regime)
+    try:
+        csi = ch.client.query_df(
+            "SELECT trade_date, close FROM daily_bars "
+            "WHERE ts_code = '000300.SH' AND trade_date >= %(start)s "
+            "ORDER BY trade_date",
+            parameters={"start": (date.today() - timedelta(days=120)).isoformat()},
+        )
+        if not csi.empty and len(csi) >= 20:
+            regime = detect_regime(csi)
+            regime_config = get_position_config(regime)
+            logger.info("市场状态: %s — %s (仓位%d%%, 止%d只)",
+                         regime.value, regime_config["description"],
+                         int(regime_config["total_capital_pct"]*100),
+                         regime_config["max_positions"])
+    except Exception as e:
+        logger.warning("Regime detection failed: %s", e)
+
     today = date.today()
     if today.weekday() >= 5:
         logger.info("Today is weekend, skipping signal generation. Latest DB: %s", latest_db)
@@ -271,39 +293,38 @@ def main(strategy: str = "trend_follow", dry_run: bool = False):
                  sum(1 for s in signals if s.signal_type.value == "SELL"),
                  len(all_buys))
 
-    # -- Market defense: force-sell all if market crashes --
-    defense_mode = False
-    if market_status:
-        # Check for crash conditions
-        try:
-            pct_str = market_status
-            if "深跌 -5%以下" in pct_str:
-                defense_mode = True
-            elif "5日: -" in pct_str:
-                # Parse 5-day change
-                import re
-                m = re.search(r'5日: ([-\d.]+)%', pct_str)
-                if m and float(m.group(1)) < -7:
-                    defense_mode = True
-        except Exception:
-            pass
-
-    if defense_mode:
-        logger.critical("DEFENSE MODE: market crash detected — force-sell all positions")
-        # Force sell ALL held stocks
+    # -- Regime-based position control --
+    if regime == MarketRegime.BEAR_TREND:
+        # Force sell all — bear market
+        logger.critical("BEAR MARKET — forcing all positions to sell")
         for code in current_positions:
             if code not in {s.ts_code for s in signals if s.signal_type.value == "SELL"}:
                 signals.append(Signal(
                     ts_code=code, signal_type=SignalType.SELL,
                     confidence=0.9,
-                    reason="市场崩盘 — 无条件清仓",
+                    reason=f"熊市防御 ({regime_config['description']})",
                     target_weight=0.0, timestamp=end_date,
                 ))
-        # Clear all buys
         signals = [s for s in signals if s.signal_type.value != "BUY"]
 
-    # Market gate: filter out buys when market is in downtrend
-    if not market_ok and not defense_mode:
+    elif regime == MarketRegime.VOLATILE:
+        # Reduce buy signals — only keep top 3
+        buys = [s for s in signals if s.signal_type.value == "BUY"]
+        buys = sorted(buys, key=lambda s: s.confidence, reverse=True)[:3]
+        reduced = []
+        for b in buys:
+            reduced.append(Signal(
+                ts_code=b.ts_code, signal_type=SignalType.BUY,
+                confidence=b.confidence * 0.7,
+                reason=f"[高波动] {b.reason}",
+                target_weight=b.target_weight * 0.5,
+                timestamp=end_date,
+            ))
+        signals = [s for s in signals if s.signal_type.value != "BUY"] + reduced
+        logger.info("VOLATILE — reduced to %d buys at half size", len(reduced))
+
+    # Market gate: block all buys if regime says 0 positions
+    if regime_config["max_positions"] == 0:
         buys_before = [s for s in signals if s.signal_type.value == "BUY"]
         signals = [s for s in signals if s.signal_type.value != "BUY"]
         logger.warning("MARKET DOWNTREND — blocked %d buy signals. Only sells allowed.", len(buys_before))
