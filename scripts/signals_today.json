@@ -1,0 +1,151 @@
+{
+  "date": "2026-07-08",
+  "buys": [
+    {
+      "ts_code": "002456.SZ",
+      "entry_price": 8.78,
+      "shares": 1800,
+      "amount": 15803.999999999998,
+      "stop_loss": 8.13857142857143,
+      "confidence": 0.75,
+      "reason": "[1/2策略] MR: Mean revert: BB=0.17 vol_ratio"
+    },
+    {
+      "ts_code": "000656.SZ",
+      "entry_price": 1.33,
+      "shares": 12000,
+      "amount": 15960.0,
+      "stop_loss": 1.2236,
+      "confidence": 0.75,
+      "reason": "[1/2策略] TF: Trend follow: MA golden cross "
+    },
+    {
+      "ts_code": "301038.SZ",
+      "entry_price": 19.6,
+      "shares": 800,
+      "amount": 15680.000000000002,
+      "stop_loss": 18.032000000000004,
+      "confidence": 0.75,
+      "reason": "[1/2策略] TF: Trend follow: MA golden cross "
+    },
+    {
+      "ts_code": "000338.SZ",
+      "entry_price": 27.91,
+      "shares": 500,
+      "amount": 13955.0,
+      "stop_loss": 25.677200000000003,
+      "confidence": 0.75,
+      "reason": "[1/2策略] TF: Trend follow: MA golden cross "
+    },
+    {
+      "ts_code": "000821.SZ",
+      "entry_price": 7.91,
+      "shares": 2000,
+      "amount": 15820.0,
+      "stop_loss": 7.277200000000001,
+      "confidence": 0.75,
+      "reason": "[1/2策略] TF: Trend follow: MA golden cross "
+    },
+    {
+      "ts_code": "001339.SZ",
+      "entry_price": 96.45,
+      "shares": 100,
+      "amount": 9645.0,
+      "stop_loss": 88.73400000000001,
+      "confidence": 0.75,
+      "reason": "[1/2策略] TF: Trend follow: MA golden cross "
+    },
+    {
+      "ts_code": "002025.SZ",
+      "entry_price": 86.3,
+      "shares": 100,
+      "amount": 8630.0,
+      "stop_loss": 79.396,
+      "confidence": 0.75,
+      "reason": "[1/2策略] TF: Trend follow: MA golden cross "
+    },
+    {
+      "ts_code": "002141.SZ",
+      "entry_price": 5.6,
+      "shares": 2800,
+      "amount": 15679.999999999998,
+      "stop_loss": 5.152,
+      "confidence": 0.75,
+      "reason": "[1/2策略] TF: Trend follow: MA golden cross "
+    },
+    {
+      "ts_code": "002180.SZ",
+      "entry_price": 15.9,
+      "shares": 1000,
+      "amount": 15900.0,
+      "stop_loss": 14.628,
+      "confidence": 0.75,
+      "reason": "[1/2策略] TF: Trend follow: MA golden cross "
+    },
+    {
+      "ts_code": "002192.SZ",
+      "entry_price": 87.84,
+      "shares": 100,
+      "amount": 8784.0,
+      "stop_loss": 80.81280000000001,
+      "confidence": 0.75,
+      "reason": "[1/2策略] TF: Trend follow: MA golden cross "
+    },
+    {
+      "ts_code": "002311.SZ",
+      "entry_price": 45.6,
+      "shares": 300,
+      "amount": 13680.0,
+      "stop_loss": 41.952000000000005,
+      "confidence": 0.75,
+      "reason": "[1/2策略] TF: Trend follow: MA golden cross "
+    }
+  ],
+  "sells": [
+    {
+      "ts_code": "002927.SZ",
+      "reason": "Multi-strategy consensus: sell",
+      "confidence": 0.8
+    },
+    {
+      "ts_code": "002733.SZ",
+      "reason": "Multi-strategy consensus: sell",
+      "confidence": 0.8
+    },
+    {
+      "ts_code": "002741.SZ",
+      "reason": "Multi-strategy consensus: sell",
+      "confidence": 0.8
+    },
+    {
+      "ts_code": "000697.SZ",
+      "reason": "Multi-strategy consensus: sell",
+      "confidence": 0.8
+    },
+    {
+      "ts_code": "002947.SZ",
+      "reason": "Multi-strategy consensus: sell",
+      "confidence": 0.8
+    },
+    {
+      "ts_code": "002645.SZ",
+      "reason": "Multi-strategy consensus: sell",
+      "confidence": 0.8
+    },
+    {
+      "ts_code": "000831.SZ",
+      "reason": "Multi-strategy consensus: sell",
+      "confidence": 0.8
+    },
+    {
+      "ts_code": "002534.SZ",
+      "reason": "Multi-strategy consensus: sell",
+      "confidence": 0.8
+    },
+    {
+      "ts_code": "300410.SZ",
+      "reason": "Multi-strategy consensus: sell",
+      "confidence": 0.8
+    }
+  ]
+}

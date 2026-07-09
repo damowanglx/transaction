@@ -245,13 +245,65 @@ def main(strategy: str = "trend_follow", dry_run: bool = False):
             target_weight=0.0, timestamp=end_date,
         ))
 
+    # 3rd voter: Stock Selector (multi-factor quality) — defensive alternative
+    if strategy == "multi" and not market_ok:
+        try:
+            from strategy.selector.stock_selector import StockSelector
+            sel = StockSelector("daily_sel")
+            sel.init(factors=["mom_60", "vol_20"], top_n=10, min_ic=0.01)
+            sel.sync_positions(current_positions)
+            sel_signals = sel.on_data(df, end_date)
+            for s in sel_signals:
+                if s.signal_type.value == "BUY":
+                    entry = all_buys.setdefault(s.ts_code, {"score": 0, "reasons": [], "weight": 0})
+                    entry["score"] += 1
+                    entry["reasons"].append(f"QF: {s.reason[:25]}")
+                else:
+                    all_sells.add(s.ts_code)
+            logger.info("QualityFactor: %d buys, %d sells",
+                         sum(1 for s in sel_signals if s.signal_type.value == "BUY"),
+                         sum(1 for s in sel_signals if s.signal_type.value == "SELL"))
+        except Exception as e:
+            logger.debug("Quality factor unavailable: %s", e)
+
     logger.info("Consensus: %d buys, %d sells (from %d buy candidates)",
                  sum(1 for s in signals if s.signal_type.value == "BUY"),
                  sum(1 for s in signals if s.signal_type.value == "SELL"),
                  len(all_buys))
 
+    # -- Market defense: force-sell all if market crashes --
+    defense_mode = False
+    if market_status:
+        # Check for crash conditions
+        try:
+            pct_str = market_status
+            if "深跌 -5%以下" in pct_str:
+                defense_mode = True
+            elif "5日: -" in pct_str:
+                # Parse 5-day change
+                import re
+                m = re.search(r'5日: ([-\d.]+)%', pct_str)
+                if m and float(m.group(1)) < -7:
+                    defense_mode = True
+        except Exception:
+            pass
+
+    if defense_mode:
+        logger.critical("DEFENSE MODE: market crash detected — force-sell all positions")
+        # Force sell ALL held stocks
+        for code in current_positions:
+            if code not in {s.ts_code for s in signals if s.signal_type.value == "SELL"}:
+                signals.append(Signal(
+                    ts_code=code, signal_type=SignalType.SELL,
+                    confidence=0.9,
+                    reason="市场崩盘 — 无条件清仓",
+                    target_weight=0.0, timestamp=end_date,
+                ))
+        # Clear all buys
+        signals = [s for s in signals if s.signal_type.value != "BUY"]
+
     # Market gate: filter out buys when market is in downtrend
-    if not market_ok:
+    if not market_ok and not defense_mode:
         buys_before = [s for s in signals if s.signal_type.value == "BUY"]
         signals = [s for s in signals if s.signal_type.value != "BUY"]
         logger.warning("MARKET DOWNTREND — blocked %d buy signals. Only sells allowed.", len(buys_before))
